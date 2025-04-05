@@ -59,7 +59,7 @@ export const viewService = new Elysia({ name: 'view/service' })
 export const view = new Elysia()
   .use(viewService)
   .use(authService)
-  .get('/', ({ view }) => {
+  .get('/', () => {
     return template('home', {
       title: '首页',
     })
@@ -70,13 +70,13 @@ export const view = new Elysia()
       scripts: ['/static/js/login.js'],
     })
   })
-  .get('/register', ({ view }) => {
+  .get('/register', () => {
     return template('register', {
       title: '注册',
       scripts: ['/static/js/register.js'],
     })
   })
-  .get('/profile', async ({ cookie: { jwt }, view, error }) => {
+  .get('/profile', async ({ cookie: { jwt }, error }) => {
     if (!jwt.value) {
       return `<script>window.location.href = '/login';</script>`
     }

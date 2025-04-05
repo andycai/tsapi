@@ -7,8 +7,6 @@ import { user } from './modules/user/init'
 import { note } from './modules/note/init'
 import { auth } from './modules/auth/init'
 import { view } from './modules/view/init'
-import { loginRoute } from './modules/auth/login'
-import { prisma } from './lib/prisma'
 
 const app = new Elysia()
   .use(opentelemetry())
@@ -49,7 +47,6 @@ const app = new Elysia()
     console.error('服务器错误:', error)
     return { success: false, message: 'Server Error' }
   })
-  .use(loginRoute) // 使用独立的登录路由模块
   .use(user)
   .use(note)
   .use(auth)
