@@ -107,7 +107,7 @@ const processEachStatements = (content: string, data: Record<string, any>): stri
  * 替换变量
  */
 const replaceVariables = (content: string, data: Record<string, any>): string => {
-    return content.replace(/\{\{\.(\w+)(?:\.(\w+))?\}\}/g, (_, key, subKey) => {
+    return content.replace(/\{\{\s*\.(\w+)(?:\.(\w+))?\s*\}\}/g, (_, key, subKey) => {
         if (subKey && data[key] && typeof data[key] === 'object') {
             return data[key][subKey] !== undefined ? data[key][subKey] : '';
         }
@@ -128,7 +128,7 @@ export const template = (template: string, data: Record<string, any>, layout?: s
     // 读取 layout 文件
     const layoutContent = loadTemplate(layout ? layout : layoutPath)
     // 用 templateContent 替换 layoutContent 中的 {{.layout}}
-    const pageContent = layoutContent.replace(/\{\{\.layout\}\}/g, () => {
+    const pageContent = layoutContent.replace(/\{\{\s*\.Layout\s*\}\}/g, () => {
         return templateContent
     })
 

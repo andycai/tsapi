@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{.title}} - Elysia 应用</title>
+  <title>{{ .Title }} - Elysia 应用</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  {{each .scripts as .script}}
-    <script src="{{.script}}"></script>
+  {{each .Scripts as .Script}}
+    <script src="{{ .Script }}"></script>
   {{/each}}
-  {{each .styles as .style}}
-    <link rel="stylesheet" href="{{.style}}">
+  {{each .Styles as .Style}}
+    <link rel="stylesheet" href="{{ .Style }}">
   {{/each}}
   <!-- 自定义主题 -->
   <script>
@@ -44,6 +44,6 @@
   </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800">
-  {{.layout}}
+  {{ .Layout }}
 </body>
 </html> 
