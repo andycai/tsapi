@@ -1,0 +1,29 @@
+{
+  "name": "app",
+  "version": "1.0.50",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/style.css",
+    "watch:css": "tailwindcss -i ./public/css/input.css -o ./public/css/style.css --watch"
+  },
+  "dependencies": {
+    "@elysiajs/cookie": "^0.8.0",
+    "@elysiajs/html": "^1.2.0",
+    "@elysiajs/opentelemetry": "^1.2.0",
+    "@elysiajs/static": "^1.2.0",
+    "@elysiajs/swagger": "^1.2.2",
+    "@prisma/client": "^6.5.0",
+    "alpinejs": "^3.14.9",
+    "autoprefixer": "^10.4.21",
+    "elysia": "latest",
+    "postcss": "^8.5.3",
+    "prisma": "^6.5.0",
+    "tailwindcss": "^4.1.2"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "module": "src/index.js"
+}

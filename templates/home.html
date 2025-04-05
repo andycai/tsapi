@@ -1,0 +1,76 @@
+<div class="min-h-screen flex flex-col justify-center items-center py-12 sm:px-6 lg:px-8 bg-gray-50">
+  <div class="max-w-md w-full">
+    <!-- 标题卡片 -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+      <div class="px-6 py-8 text-center">
+        <h2 class="text-3xl font-extrabold text-gray-900">
+          欢迎使用 Elysia 应用
+        </h2>
+        <p class="mt-2 text-gray-600">
+          基于 Elysia.js 和 Bun 的高性能 Web 应用
+        </p>
+        
+        <div class="mt-10 flex justify-center space-x-4">
+          <a 
+            href="/login" 
+            class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            登录
+          </a>
+          <a 
+            href="/register" 
+            class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            注册
+          </a>
+        </div>
+      </div>
+      
+      <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 text-center text-sm text-gray-500">
+        <p>使用 <span class="font-semibold">Elysia.js</span>, <span class="font-semibold">Alpine.js</span>, 
+        <span class="font-semibold">Tailwind CSS</span> 和 <span class="font-semibold">Prisma</span> 构建</p>
+      </div>
+    </div>
+    
+    <!-- 技术栈卡片 -->
+    <div class="mt-8 bg-white shadow rounded-lg overflow-hidden">
+      <div class="px-6 py-5 border-b border-gray-200">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">技术栈特点</h3>
+      </div>
+      <div class="px-6 py-5">
+        <ul class="space-y-4">
+          <li class="flex">
+            <svg class="flex-shrink-0 h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span class="ml-3 text-gray-700">Elysia.js 提供极速API响应</span>
+          </li>
+          <li class="flex">
+            <svg class="flex-shrink-0 h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span class="ml-3 text-gray-700">Alpine.js 实现轻量级交互</span>
+          </li>
+          <li class="flex">
+            <svg class="flex-shrink-0 h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span class="ml-3 text-gray-700">Tailwind CSS 提供现代化UI设计</span>
+          </li>
+          <li class="flex">
+            <svg class="flex-shrink-0 h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span class="ml-3 text-gray-700">Prisma ORM 简化数据库操作</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div> 

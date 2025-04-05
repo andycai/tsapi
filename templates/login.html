@@ -1,0 +1,103 @@
+<div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8" x-data="loginManagement()">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+      登录
+    </h2>
+    <p class="mt-2 text-center text-sm text-gray-600">
+      欢迎回来！请登录您的账户
+    </p>
+  </div>
+
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <!-- 错误提示 -->
+      <div 
+        x-show="errorMessage" 
+        x-transition
+        class="mb-4 bg-red-50 border border-red-200 text-red-800 rounded-md p-4 text-sm"
+        x-text="errorMessage">
+      </div>
+      
+      <!-- 成功提示 -->
+      <div 
+        x-show="successMessage" 
+        x-transition
+        class="mb-4 bg-green-50 border border-green-200 text-green-800 rounded-md p-4 text-sm"
+        x-text="successMessage">
+      </div>
+      
+      <form class="space-y-6" @submit.prevent="login">
+        <div>
+          <label for="username" class="block text-sm font-medium text-gray-700">
+            用户名
+          </label>
+          <div class="mt-1">
+            <input 
+              id="username" 
+              name="username" 
+              type="text" 
+              required 
+              x-model="username"
+              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">
+            密码
+          </label>
+          <div class="mt-1">
+            <input 
+              id="password" 
+              name="password" 
+              type="password" 
+              required 
+              x-model="password"
+              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+          </div>
+        </div>
+
+        <div>
+          <button 
+            type="submit" 
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            :class="{ 'opacity-75 cursor-not-allowed': loading }"
+            :disabled="loading"
+          >
+            <span x-show="loading" class="mr-2">
+              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </span>
+            登录
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-6">
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">
+              没有账户?
+            </span>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <a 
+            href="/register" 
+            class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            立即注册
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
