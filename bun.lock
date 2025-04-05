@@ -9,6 +9,7 @@
         "@elysiajs/opentelemetry": "^1.2.0",
         "@elysiajs/static": "^1.2.0",
         "@elysiajs/swagger": "^1.2.2",
+        "@iarna/toml": "^2.2.5",
         "@prisma/client": "^6.5.0",
         "alpinejs": "^3.14.9",
         "autoprefixer": "^10.4.21",
@@ -86,6 +87,8 @@
     "@grpc/grpc-js": ["@grpc/grpc-js@1.13.2", "https://registry.npmmirror.com/@grpc/grpc-js/-/grpc-js-1.13.2.tgz", { "dependencies": { "@grpc/proto-loader": "^0.7.13", "@js-sdsl/ordered-map": "^4.4.2" } }, "sha512-nnR5nmL6lxF8YBqb6gWvEgLdLh/Fn+kvAdX5hUOnt48sNSb0riz/93ASd2E5gvanPA41X6Yp25bIfGRp1SMb2g=="],
 
     "@grpc/proto-loader": ["@grpc/proto-loader@0.7.13", "https://registry.npmmirror.com/@grpc/proto-loader/-/proto-loader-0.7.13.tgz", { "dependencies": { "lodash.camelcase": "^4.3.0", "long": "^5.0.0", "protobufjs": "^7.2.5", "yargs": "^17.7.2" }, "bin": { "proto-loader-gen-types": "build/bin/proto-loader-gen-types.js" } }, "sha512-AiXO/bfe9bmxBjxxtYxFAXGZvMaN5s8kO+jBHAJCON8rJoB5YS/D6X7ZNc6XQkuHNmyl4CYaMI1fJ/Gn27RGGw=="],
+
+    "@iarna/toml": ["@iarna/toml@2.2.5", "https://registry.npmmirror.com/@iarna/toml/-/toml-2.2.5.tgz", {}, "sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg=="],
 
     "@js-sdsl/ordered-map": ["@js-sdsl/ordered-map@4.4.2", "https://registry.npmmirror.com/@js-sdsl/ordered-map/-/ordered-map-4.4.2.tgz", {}, "sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw=="],
 

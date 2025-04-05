@@ -1,0 +1,60 @@
+# 应用配置
+[app]
+is_dev = true     # 是否为开发环境
+is_secure = false # 是否启用安全模式（HTTPS）
+
+# 服务器配置
+[server]
+host = "0.0.0.0"
+port = 3000
+output = "../publish/output"
+script_path = "sh"
+user_data_path = "./user_data.bin"
+# 静态路径配置改为数组
+static_paths = [
+    { route = "/static", path = "./public" },
+    { route = "/uploads", path = "./uploads" },
+    { route = "/cdn", path = "./cdn" },
+]
+
+# CORS 跨域配置
+[cors]
+enabled = true # 是否启用跨域
+allowed_origins = [
+    "*",
+] # 允许的源，["*"] 表示允许所有，或指定域名 ["http://localhost:3000", "https://example.com"]
+allowed_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"] # 允许的 HTTP 方法
+allowed_headers = ["Origin", "Content-Type", "Accept", "Authorization"] # 允许的请求头
+allow_credentials = false # 是否允许携带认证信息
+max_age = 24 # 预检请求结果缓存时间（小时）
+
+[database]
+driver = "sqlite"
+dsn = "data/tsapi.db"
+max_open_conns = 100     # 最大打开连接数
+max_idle_conns = 10      # 最大空闲连接数
+conn_max_lifetime = 3600 # 连接最大生命周期（秒）
+
+[json_paths]
+server_list = "data/serverlist.json"
+last_server = "data/lastserver.json"
+server_info = "data/serverinfo.json"
+notice_list = "data/noticelist.json"
+notice_num = "data/noticenum.json"
+
+[ftp]
+host = "192.168.200.20"
+port = "21"
+user = "TestDQ"
+password = "135ajdq"
+# apk_path = "/DQ1-c/out"
+# zip_path = "/DQ1-c/CLIENT_DQ1_DQDQ_CN"
+apk_path = "/PublisherDQ2"
+zip_path = "/PublisherDQ2"
+log_dir = "output/logs/ftp"
+max_log_size = 20971520
+
+[auth]
+jwt_secret = "!@#$bUn1234Elysia"
+token_expire = 604800            # 7天
+remember_token_expire = 2592000  # 30天

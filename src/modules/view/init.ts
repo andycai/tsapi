@@ -1,8 +1,6 @@
 import { Elysia } from 'elysia'
 import { html } from '@elysiajs/html'
 import { staticPlugin } from '@elysiajs/static'
-import { readFileSync } from 'fs'
-import { join } from 'path'
 import { authService } from '../auth/init'
 import { prisma } from '../../lib/prisma'
 import { template } from '../../lib/template'

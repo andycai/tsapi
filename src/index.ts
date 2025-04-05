@@ -1,5 +1,4 @@
 import { Elysia, t } from 'elysia'
-import { opentelemetry } from '@elysiajs/opentelemetry'
 import { swagger } from '@elysiajs/swagger'
 import { cookie } from '@elysiajs/cookie'
 
@@ -7,9 +6,12 @@ import { user } from './modules/user/init'
 import { note } from './modules/note/init'
 import { auth } from './modules/auth/init'
 import { view } from './modules/view/init'
+import { configLoader } from './lib/config'
+
+// 获取服务器配置
+const serverConfig = configLoader.getServerConfig()
 
 const app = new Elysia()
-  .use(opentelemetry())
   .use(swagger())
   .use(cookie())
   .onError(({ error, code, set }) => {
@@ -51,6 +53,9 @@ const app = new Elysia()
   .use(note)
   .use(auth)
   .use(view)
-  .listen(3000)
+  .listen({
+    port: serverConfig.port,
+    hostname: serverConfig.host
+  })
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`)
