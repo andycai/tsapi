@@ -1,12 +1,10 @@
 import { AuthDao } from './dao'
 import { RegisterDto, LoginDto, UserResponseDto, ApiResponse } from './entity'
-import { User } from '@prisma/client'
 import { randomBytes } from 'crypto'
-import { configLoader } from '../../lib/config'
+import { AuthUtils } from './utils'
 
 export class AuthService {
   private authDao: AuthDao
-  private authConfig = configLoader.getAuthConfig()
 
   constructor() {
     this.authDao = new AuthDao()
@@ -52,7 +50,7 @@ export class AuthService {
     return {
       success: true,
       message: '注册成功',
-      data: this.mapUserToDto(user)
+      data: AuthUtils.mapUserToDto(user)
     }
   }
 
@@ -73,33 +71,20 @@ export class AuthService {
     const isValidPassword = await Bun.password.verify(loginDto.password, user.password)
 
     if (!isValidPassword) {
-    return {
+      return {
         success: false,
         message: '用户名或密码错误'
-    }
+      }
     }
 
-    // 根据是否选择"记住我"来设置不同的过期时间
-    const tokenExpiry = loginDto.remember 
-      ? this.authConfig.remember_token_expire 
-      : this.authConfig.token_expire
+    // 获取令牌过期时间
+    const tokenExpiry = AuthUtils.getTokenExpiry(loginDto.remember)
 
     return {
       success: true,
       message: '登录成功',
-      data: this.mapUserToDto(user),
+      data: AuthUtils.mapUserToDto(user),
       tokenExpiry
-    }
-  }
-
-  /**
-   * 将用户实体映射为DTO（移除敏感信息）
-   */
-  private mapUserToDto(user: User): UserResponseDto {
-    return {
-      id: user.id,
-      username: user.username,
-      email: user.email
     }
   }
 }

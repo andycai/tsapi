@@ -4,6 +4,8 @@ import { staticPlugin } from '@elysiajs/static'
 import { authService } from '../auth/init'
 import { prisma } from '../../lib/prisma'
 import { template } from '../../lib/template'
+import { AuthUtils } from '../auth/utils'
+import { redirect } from '../../lib/http'
 
 /**
  * 视图服务
@@ -43,29 +45,27 @@ export const view = new Elysia()
       Scripts: ['/static/js/register.js'],
     })
   })
-  .get('/profile', async ({ cookie: { jwt }, error }) => {
+  .get('/profile', async ({ cookie: { jwt }, error, set }) => {
     if (!jwt.value) {
-      return `<script>window.location.href = '/login';</script>`
+      redirect(set, '/login')
+      return 'Redirecting to login page...'
     }
     
     try {
-      // 直接从数据库获取用户信息
+      // 使用AuthUtils验证用户身份
       const username = jwt.value
-      const user = await prisma.user.findUnique({ 
-        where: { username } 
-      })
+      const user = await AuthUtils.verifyTokenAndGetUser(username)
       
       if (!user) {
         jwt.remove()
-        return `<script>window.location.href = '/login';</script>`
+        redirect(set, '/login')
+        return 'Redirecting to login page...'
       }
 
       return template('profile', {
         Title: '个人资料',
         user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
+          ...AuthUtils.mapUserToDto(user),
           createdAt: user.createdAt
         }
       }) 
@@ -79,6 +79,9 @@ export const view = new Elysia()
   })
   .get('/logout', ({ cookie: { jwt }, set }) => {
     jwt.remove()
-    set.redirect = '/'
+    
+    // 使用重定向工具函数
+    redirect(set, '/')
+    
     return 'Redirecting to home page...'
   }) 

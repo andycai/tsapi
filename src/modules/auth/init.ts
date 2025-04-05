@@ -2,6 +2,11 @@ import { Elysia, t } from 'elysia'
 import { AuthHandler } from './handler'
 import { User } from '@prisma/client'
 import { prisma } from '../../lib/prisma'
+import { configLoader } from '../../lib/config'
+import { AuthUtils } from './utils'
+
+// 获取认证配置
+const authConfig = configLoader.getAuthConfig()
 
 // 验证JWT的cookie模型
 const jwtCookie = t.Cookie(
@@ -9,10 +14,10 @@ const jwtCookie = t.Cookie(
     jwt: t.String()
   },
   {
-    secrets: process.env.JWT_SECRET || '!@#$bUn1234Elysia',
+    secrets: authConfig.jwt_secret,
     // cookie配置
     cookie: {
-      maxAge: 7 * 86400, // 7天过期
+      maxAge: authConfig.token_expire, // 默认过期时间
     }
   }
 )
@@ -51,7 +56,7 @@ export const authService = new Elysia({ name: 'auth/service' })
           }
 
           const username = jwt.value
-          const user = await prisma.user.findUnique({ where: { username } })
+          const user = await AuthUtils.verifyTokenAndGetUser(username)
 
           if (!user) {
             jwt.remove()
@@ -61,6 +66,7 @@ export const authService = new Elysia({ name: 'auth/service' })
             })
           }
 
+          // 保存用户信息到 store 中，供后续中间件和请求处理函数使用
           store.user = user
         }
       }
@@ -89,7 +95,7 @@ export const auth = new Elysia({ prefix: '/auth' })
   )
   .get(
     '/logout',
-    ({ cookie }) => authHandler.handleLogout({ cookie } as any),
+    ({ cookie, set }) => authHandler.handleLogout({ cookie, set } as any),
     {
       cookie: 'jwtCookie'
     }
