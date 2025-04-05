@@ -1,9 +1,8 @@
 import { Elysia, t } from 'elysia'
-import { AuthHandler } from './handler'
 import { User } from '@prisma/client'
-import { prisma } from '../../lib/prisma'
 import { configLoader } from '../../lib/config'
 import { AuthUtils } from './utils'
+import { AuthHandler } from './handler'
 
 // 获取认证配置
 const authConfig = configLoader.getAuthConfig()

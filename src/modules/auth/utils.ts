@@ -1,7 +1,7 @@
-import { configLoader } from '../../lib/config'
 import type { User } from '@prisma/client'
-import type { UserResponseDto } from './entity'
 import { prisma } from '../../lib/prisma'
+import { configLoader } from '../../lib/config'
+import type { UserResponseDto } from './entity'
 
 // 获取认证配置
 const authConfig = configLoader.getAuthConfig()
