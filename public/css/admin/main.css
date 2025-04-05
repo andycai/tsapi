@@ -1,0 +1,47 @@
+/* Alpine.js 相关样式 */
+[x-cloak] {
+    display: none !important;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* 暗色模式滚动条 */
+.dark ::-webkit-scrollbar-track {
+    background: #1F2937;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #4B5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #374151;
+}
+
+/* Firefox 滚动条样式 */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+}
+
+.dark * {
+    scrollbar-color: #4B5563 #1F2937;
+}
