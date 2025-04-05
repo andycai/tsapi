@@ -2,6 +2,7 @@ function loginManagement() {
     return {
         username: '',
         password: '',
+        remember: false,
         errorMessage: '',
         successMessage: '',
         loading: false,
@@ -15,7 +16,8 @@ function loginManagement() {
                 // 记录发送到服务器的数据
                 const requestData = {
                     username: this.username,
-                    password: this.password
+                    password: this.password,
+                    remember: this.remember
                 };
                 console.log('发送到服务器的数据:', requestData);
                 

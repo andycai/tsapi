@@ -27,7 +27,8 @@ export const authService = new Elysia({ name: 'auth/service' })
     }),
     login: t.Object({
       username: t.String(),
-      password: t.String()
+      password: t.String(),
+      remember: t.Optional(t.Boolean())
     }),
     jwtCookie,
     optionalJwtCookie: t.Optional(t.Ref('jwtCookie'))
@@ -81,7 +82,10 @@ export const auth = new Elysia({ prefix: '/auth' })
   )
   .post(
     '/login',
-    ({ body, set }) => authHandler.handleLogin({ body, set } as any)
+    ({ body, set }) => authHandler.handleLogin({ body, set } as any),
+    {
+      body: 'login'
+    }
   )
   .get(
     '/logout',

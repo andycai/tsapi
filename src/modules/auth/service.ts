@@ -2,9 +2,11 @@ import { AuthDao } from './dao'
 import { RegisterDto, LoginDto, UserResponseDto, ApiResponse } from './entity'
 import { User } from '@prisma/client'
 import { randomBytes } from 'crypto'
+import { configLoader } from '../../lib/config'
 
 export class AuthService {
   private authDao: AuthDao
+  private authConfig = configLoader.getAuthConfig()
 
   constructor() {
     this.authDao = new AuthDao()
@@ -57,7 +59,7 @@ export class AuthService {
   /**
    * 用户登录
    */
-  async login(loginDto: LoginDto): Promise<ApiResponse<UserResponseDto>> {
+  async login(loginDto: LoginDto): Promise<ApiResponse<UserResponseDto> & { tokenExpiry?: number }> {
     // 查找用户
     const user = await this.authDao.findUserByUsername(loginDto.username)
 
@@ -68,22 +70,25 @@ export class AuthService {
       }
     }
 
-    // 验证密码（特殊处理admin测试账号）
-    if (!(loginDto.username === 'admin' && loginDto.password === 'password123' && user.id)) {
-      const isValidPassword = await Bun.password.verify(loginDto.password, user.password)
+    const isValidPassword = await Bun.password.verify(loginDto.password, user.password)
 
-      if (!isValidPassword) {
-        return {
-          success: false,
-          message: '用户名或密码错误'
-        }
-      }
+    if (!isValidPassword) {
+    return {
+        success: false,
+        message: '用户名或密码错误'
     }
+    }
+
+    // 根据是否选择"记住我"来设置不同的过期时间
+    const tokenExpiry = loginDto.remember 
+      ? this.authConfig.remember_token_expire 
+      : this.authConfig.token_expire
 
     return {
       success: true,
       message: '登录成功',
-      data: this.mapUserToDto(user)
+      data: this.mapUserToDto(user),
+      tokenExpiry
     }
   }
 

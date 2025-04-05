@@ -11,6 +11,7 @@ export interface RegisterDto {
 export interface LoginDto {
   username: string
   password: string
+  remember?: boolean
 }
 
 // 用户响应DTO（不包含密码等敏感信息）
