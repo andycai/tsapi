@@ -1,0 +1,139 @@
+<!-- 菜单管理页面 -->
+<div x-data="menuManagement()" class="space-y-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">菜单管理</h2>
+        <button @click="createMenu()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            新建菜单
+        </button>
+    </div>
+
+    <!-- 菜单树形表格 -->
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="px-4 py-3">菜单名称</th>
+                    <th scope="col" class="px-4 py-3">图标</th>
+                    <th scope="col" class="px-4 py-3">路径</th>
+                    <th scope="col" class="px-4 py-3">权限</th>
+                    <th scope="col" class="px-4 py-3">排序</th>
+                    <th scope="col" class="px-4 py-3">显示</th>
+                    <th scope="col" class="px-4 py-3">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="menu in flattenedMenus" :key="menu.id">
+                    <tr :class="{
+                        'bg-white dark:bg-gray-800': menu.level === 0,
+                        'bg-gray-50 dark:bg-gray-700': menu.level === 1,
+                        'bg-gray-100 dark:bg-gray-600': menu.level === 2
+                    }">
+                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-white" :style="{ paddingLeft: (menu.level + 1.5) + 'rem' }">
+                            <span class="inline-flex items-center">
+                                <template x-if="menu.level > 0">
+                                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </template>
+                                <span x-text="menu.name"></span>
+                            </span>
+                        </td>
+                        <td class="px-4 py-3" x-text="menu.icon"></td>
+                        <td class="px-4 py-3" x-text="menu.path"></td>
+                        <td class="px-4 py-3" x-text="menu.permission || '-'"></td>
+                        <td class="px-4 py-3" x-text="menu.sort"></td>
+                        <td class="px-4 py-3">
+                            <span x-text="menu.is_show ? '是' : '否'"></span>
+                        </td>
+                        <td class="px-4 py-3 space-x-2">
+                            <button @click="editMenu(menu)" 
+                                    class="text-blue-600 hover:text-blue-900">编辑</button>
+                            <button @click="deleteMenu(menu.id)"
+                                    class="text-red-600 hover:text-red-900">删除</button>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 创建/编辑菜单模态框 -->
+    <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full dark:bg-gray-800">
+                <form @submit.prevent="submitForm">
+                    <div class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                            <span x-text="editMode ? '编辑菜单' : '新建菜单'"></span>
+                        </h3>
+                        <div class="space-y-4">
+                            <!-- 父级菜单 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">父级菜单</label>
+                                <select x-model.number="form.parent_id"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                    <option value="0">无（作为一级菜单）</option>
+                                    <template x-for="menu in parentMenus" :key="menu.id">
+                                        <option :value="menu.id" x-text="menu.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <!-- 菜单名称 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">菜单名称</label>
+                                <input type="text" x-model="form.name" required
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <!-- 菜单路径 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">菜单路径</label>
+                                <input type="text" x-model="form.path" required
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <!-- 图标 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">图标</label>
+                                <input type="text" x-model="form.icon"
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <!-- 权限 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">权限</label>
+                                <input type="text" x-model="form.permission"
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <!-- 排序 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">排序</label>
+                                <input type="number" x-model.number="form.sort" required
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <!-- 是否显示 -->
+                            <div class="flex items-center">
+                                <input type="checkbox" x-model="form.is_show"
+                                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <label class="ml-2 block text-sm text-gray-900 dark:text-gray-300">显示菜单</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                :disabled="loading">
+                            <span x-text="loading ? '保存中...' : '保存'"></span>
+                        </button>
+                        <button type="button"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm dark:bg-gray-600 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-700"
+                                @click="closeModal">
+                            取消
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,385 @@
+<div x-data="lubanManagement()" class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">游戏配置表管理</h2>
+        <!-- 按钮组 -->
+        <div class="mb-4 flex justify-end space-x-4">
+            <button @click="createProject" 
+                    class="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                新建项目
+            </button>
+        </div>
+    </div>
+
+    <!-- 项目列表 -->
+    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">项目名称</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">配置根目录</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">输出目录</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">状态</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                <template x-for="project in projects" :key="project.id">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200">
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="project.name"></span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400" x-text="project.description"></span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" x-text="project.root_path"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" x-text="project.output_path"></td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                  :class="{
+                                      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': project.status === 'active',
+                                      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200': project.status === 'archived'
+                                  }"
+                                  x-text="project.status === 'active' ? '活跃' : '已归档'">
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button @click="viewProject(project)" 
+                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                查看
+                            </button>
+                            <button @click="editProject(project)" 
+                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                编辑
+                            </button>
+                            <button @click="deleteProject(project.id)" 
+                                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                删除
+                            </button>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 项目表单模态框 -->
+    <div x-cloak x-show="showProjectModal" 
+         class="fixed inset-0 z-40 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="showProjectModal = false"></div>
+
+            <div class="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white" x-text="editMode ? '编辑项目' : '新建项目'"></h3>
+                </div>
+
+                <form @submit.prevent="submitProject">
+                    <div class="px-6 py-4 space-y-4">
+                        <!-- 基本信息 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">项目名称</label>
+                            <input type="text" x-model="form.name" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">描述</label>
+                            <textarea x-model="form.description"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    rows="3"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">配置根目录</label>
+                            <input type="text" x-model="form.root_path" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">输出目录</label>
+                            <input type="text" x-model="form.output_path" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+
+                        <!-- 项目状态 -->
+                        <div class="flex items-center">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" x-model="form.status" value="active"
+                                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">项目活跃</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-3">
+                        <button type="button" @click="showProjectModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            取消
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            确定
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 项目详情模态框 -->
+    <div x-cloak x-show="showProjectDetailModal" 
+         class="fixed inset-0 z-40 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="showProjectDetailModal = false"></div>
+
+            <div class="inline-block w-full max-w-4xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white" x-text="currentProject?.name"></h3>
+                        <button @click="createTable" 
+                                class="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            新建配置表
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 配置表列表 -->
+                <div class="px-6 py-4">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-800">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">配置表名称</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">文件路径</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">文件类型</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">状态</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                                <template x-for="table in currentProjectTables" :key="table.id">
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="table.name"></span>
+                                                <span class="text-xs text-gray-500 dark:text-gray-400" x-text="table.description"></span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" x-text="table.file_path"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" x-text="table.file_type"></td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                                  :class="{
+                                                      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': table.status === 'active',
+                                                      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200': table.status === 'archived'
+                                                  }"
+                                                  x-text="table.status === 'active' ? '活跃' : '已归档'">
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                            <button @click="exportTable(table)" 
+                                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                                导出
+                                            </button>
+                                            <button @click="editTable(table)" 
+                                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                                编辑
+                                            </button>
+                                            <button @click="deleteTable(table.id)" 
+                                                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                                删除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配置表表单模态框 -->
+    <div x-cloak x-show="showTableModal" 
+         class="fixed inset-0 z-50 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="showTableModal = false"></div>
+
+            <div class="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white" x-text="editMode ? '编辑配置表' : '新建配置表'"></h3>
+                </div>
+
+                <form @submit.prevent="submitTable">
+                    <div class="px-6 py-4 space-y-4">
+                        <!-- 基本信息 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">配置表名称</label>
+                            <input type="text" x-model="tableForm.name" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">描述</label>
+                            <textarea x-model="tableForm.description"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    rows="3"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">文件路径</label>
+                            <input type="text" x-model="tableForm.file_path" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+
+                        <!-- 文件类型和工作表 -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">文件类型</label>
+                                <select x-model="tableForm.file_type"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                    <option value="excel">Excel</option>
+                                    <option value="csv">CSV</option>
+                                    <option value="json">JSON</option>
+                                    <option value="xml">XML</option>
+                                    <option value="yaml">YAML</option>
+                                </select>
+                            </div>
+                            <div x-show="tableForm.file_type === 'excel'">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">工作表名称</label>
+                                <input type="text" x-model="tableForm.sheet_name"
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                        </div>
+
+                        <!-- 数据验证规则 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">数据验证规则（JSON格式）</label>
+                            <textarea x-model="tableForm.validators"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    rows="5"></textarea>
+                        </div>
+
+                        <!-- 配置表状态 -->
+                        <div class="flex items-center">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" x-model="tableForm.status" value="active"
+                                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">配置表活跃</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-3">
+                        <button type="button" @click="showTableModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            取消
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            确定
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导出配置表模态框 -->
+    <div x-cloak x-show="showExportModal" 
+         class="fixed inset-0 z-50 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="showExportModal = false"></div>
+
+            <div class="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">导出配置表</h3>
+                </div>
+
+                <form @submit.prevent="submitExport">
+                    <div class="px-6 py-4 space-y-4">
+                        <!-- 导出格式 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">导出格式</label>
+                            <select x-model="exportForm.format" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                <option value="binary">Binary</option>
+                                <option value="json">JSON</option>
+                                <option value="bson">BSON</option>
+                                <option value="xml">XML</option>
+                                <option value="lua">Lua</option>
+                                <option value="yaml">YAML</option>
+                            </select>
+                        </div>
+
+                        <!-- 目标语言 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">目标语言</label>
+                            <select x-model="exportForm.language" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                <option value="cpp">C++</option>
+                                <option value="java">Java</option>
+                                <option value="go">Go</option>
+                                <option value="cs">C#</option>
+                                <option value="python">Python</option>
+                                <option value="lua">Lua</option>
+                            </select>
+                        </div>
+
+                        <!-- 导出进度 -->
+                        <div x-show="exportProgress">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">导出进度</span>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300" x-text="exportProgress.progress + '%'"></span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                <div class="bg-blue-600 h-2.5 rounded-full" :style="'width: ' + exportProgress.progress + '%'"></div>
+                            </div>
+                            <div class="mt-2">
+                                <pre class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap" x-text="exportProgress.output"></pre>
+                                <pre x-show="exportProgress.error" class="text-sm text-red-600 dark:text-red-400 whitespace-pre-wrap" x-text="exportProgress.error"></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-3">
+                        <button type="button" @click="showExportModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            关闭
+                        </button>
+                        <button type="submit" x-show="!exportProgress || exportProgress.status !== 'running'"
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            开始导出
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

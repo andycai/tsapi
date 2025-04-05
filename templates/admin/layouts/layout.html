@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>管理后台 - {{ .Title }}</title>
+    <script src="/static/js/alpine-3.14.9.js" defer></script>
+    <link rel="stylesheet" href="/static/css/tailwind.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/admin/layout.css">
+    
+    <!-- 页面特定的头部内容 -->
+    {{if .Head}}
+        {{.Head}}
+    {{end}}
+</head>
+<body class="h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased" 
+      x-data="adminLayout()" 
+      :class="{ 'dark': theme === 'dark', 'overflow-hidden': mobileMenuOpen }">
+    <!-- 通用组件 -->
+    <div class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center space-y-2">
+        <template x-for="notification in $store.notification.notifications" :key="notification.id">
+            <div x-show="notification.show"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform translate-y-2"
+                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                 x-transition:leave="transition ease-in duration-300"
+                 x-transition:leave-start="opacity-100 transform translate-y-0"
+                 x-transition:leave-end="opacity-0 transform translate-y-2"
+                 :class="{
+                     'bg-green-500': notification.type === 'success',
+                     'bg-red-500': notification.type === 'error',
+                     'bg-yellow-500': notification.type === 'warning',
+                     'bg-blue-500': notification.type === 'info'
+                 }"
+                 class="px-4 py-2 rounded-lg text-white shadow-lg flex items-center">
+                <span x-text="notification.message" class="text-sm font-medium"></span>
+                <div class="w-full h-1 bg-white/20 absolute bottom-0 left-0 rounded-b-lg overflow-hidden">
+                    <div class="h-full bg-white/40 transition-all duration-300 ease-linear"
+                         :style="{ width: notification.progress + '%' }">
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- 移动端菜单遮罩 -->
+    <div x-cloak x-show="mobileMenuOpen" 
+         class="fixed inset-0 z-20 bg-gray-900/50 lg:hidden"
+         @click="mobileMenuOpen = false"
+         x-transition:enter="transition-opacity ease-linear duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-linear duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+    </div>
+
+    <!-- 移动端菜单按钮 -->
+    <button @click="mobileMenuOpen = true"
+            class="fixed bottom-4 right-4 lg:hidden z-30 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+
+    <div x-cloak class="flex h-screen">
+        <!-- 左侧菜单 -->
+        <div :class="{
+                'w-56': !collapsed,
+                'w-16': collapsed,
+                '-translate-x-full lg:translate-x-0': !mobileMenuOpen,
+                'translate-x-0': mobileMenuOpen
+            }" 
+            class="fixed lg:relative top-0 left-0 z-30 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300">
+            <!-- 顶部Logo -->
+            <div class="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center overflow-hidden">
+                    <svg class="w-8 h-8 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span x-show="!collapsed" 
+                          x-transition:enter="transition-opacity ease-out duration-300"
+                          x-transition:enter-start="opacity-0"
+                          x-transition:enter-end="opacity-100"
+                          x-transition:leave="transition-opacity ease-in duration-200"
+                          x-transition:leave-start="opacity-100"
+                          x-transition:leave-end="opacity-0"
+                          class="ml-3 text-lg font-bold text-gray-900 dark:text-white truncate">
+                        管理后台
+                    </span>
+                </div>
+                <button @click="toggleCollapse()" 
+                        class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600 transition-transform duration-300"
+                        :class="{'rotate-180': collapsed}">
+                    <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 侧边栏菜单 -->
+            <nav class="flex-1 px-2 py-2 space-y-1 overflow-y-auto overflow-x-hidden" x-data>
+                <!-- 首页菜单项 -->
+                <a href="/admin"
+                    class="flex items-center h-11 px-3 text-sm font-medium rounded-lg group relative min-w-[4rem]"
+                    :class="currentPath === '/admin' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'"
+                    @click.prevent="navigate('/admin')">
+                    <span x-html="menuIcons.home" class="w-6 h-6 flex-shrink-0"></span>
+                    <span x-show="!collapsed" 
+                          class="ml-3 transition-opacity duration-300"
+                          x-transition:enter="transition-opacity ease-out duration-300"
+                          x-transition:enter-start="opacity-0"
+                          x-transition:enter-end="opacity-100"
+                          x-transition:leave="transition-opacity ease-in duration-200"
+                          x-transition:leave-start="opacity-100"
+                          x-transition:leave-end="opacity-0">
+                        首页
+                    </span>
+                    <span x-show="collapsed" 
+                          class="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 text-sm font-medium text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                        首页
+                    </span>
+                </a>
+
+                <!-- 动态菜单项 -->
+                <template x-for="menu in menuTree" :key="menu.menu.id">
+                    <div class="relative" 
+                         @mouseenter="collapsed && (expandedGroup = menu.menu.id)"
+                         @mouseleave="collapsed && !$el.querySelector('.submenu:hover') && (expandedGroup = null)"
+                         x-show="hasMenuPermission(menu)">
+                        <!-- 菜单组标题 -->
+                        <button @click="!collapsed ? toggleMenuGroup(menu.menu.id) : null"
+                            class="w-full flex items-center h-11 px-3 text-sm font-medium rounded-lg group relative min-w-[4rem]"
+                            :class="{
+                                'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white': expandedGroup !== menu.menu.id,
+                                'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400': expandedGroup === menu.menu.id
+                            }">
+                            <span x-html="menuIcons[menu.menu.icon] || menuIcons.default" class="w-6 h-6 flex-shrink-0"></span>
+                            <span class="ml-3" x-show="!collapsed" x-text="menu.menu.name"></span>
+                            <span x-show="!collapsed && hasVisibleChildren(menu)" class="ml-auto">
+                                <svg class="w-4 h-4 transition-transform"
+                                     :class="{ 'rotate-180': expandedGroup === menu.menu.id }"
+                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </span>
+                        </button>
+
+                        <!-- 展开状态下的子菜单 -->
+                        <div x-show="!collapsed && expandedGroup === menu.menu.id" 
+                             x-transition:enter="transition-all ease-out duration-300"
+                             x-transition:enter-start="opacity-0 max-h-0"
+                             x-transition:enter-end="opacity-100 max-h-[1000px]"
+                             x-transition:leave="transition-all ease-in duration-200"
+                             x-transition:leave-start="opacity-100 max-h-[1000px]"
+                             x-transition:leave-end="opacity-0 max-h-0"
+                             class="mt-1 space-y-1 pl-4 overflow-hidden">
+                            <template x-for="child in menu.children" :key="child.menu.id">
+                                <a :href="child.menu.path"
+                                    class="flex items-center h-10 px-3 text-sm font-medium rounded-lg transition-colors duration-200"
+                                    :class="currentPath === child.menu.path ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'"
+                                    @click.prevent="navigate(child.menu.path)"
+                                    x-show="hasMenuPermission(child)">
+                                    <span x-html="menuIcons[child.menu.icon] || menuIcons.default" class="w-5 h-5 flex-shrink-0"></span>
+                                    <span class="ml-3" x-text="child.menu.name"></span>
+                                </a>
+                            </template>
+                        </div>
+
+                        <!-- 收起状态下的子菜单浮层 -->
+                        <div x-show="collapsed && expandedGroup === menu.menu.id && !justCollapsed && hasVisibleChildren(menu)"
+                             x-transition:enter="transition-opacity ease-out duration-200"
+                             x-transition:enter-start="opacity-0"
+                             x-transition:enter-end="opacity-100"
+                             x-transition:leave="transition-opacity ease-in duration-150"
+                             x-transition:leave-start="opacity-100"
+                             x-transition:leave-end="opacity-0"
+                             class="submenu fixed left-16 min-w-[200px] py-2 top-0 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-50"
+                             :style="{ top: $el.parentElement.offsetTop + 'px' }"
+                             @mouseenter="expandedGroup = menu.menu.id"
+                             @mouseleave="expandedGroup = null">
+                            <div class="absolute -left-2 top-4 w-2.5 h-2.5 bg-white dark:bg-gray-800 border-l border-t border-gray-200 dark:border-gray-700 transform -rotate-45"></div>
+                            <template x-for="child in menu.children" :key="child.menu.id">
+                                <a :href="child.menu.path"
+                                    class="flex items-center h-10 px-4 text-sm font-medium transition-colors duration-200"
+                                    :class="currentPath === child.menu.path ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'"
+                                    @click.prevent="navigate(child.menu.path)"
+                                    x-show="hasMenuPermission(child)">
+                                    <span x-html="menuIcons[child.menu.icon] || menuIcons.default" class="w-5 h-5 flex-shrink-0"></span>
+                                    <span class="ml-3" x-text="child.menu.name"></span>
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </nav>
+
+            <!-- 底部信息 -->
+            <div class="border-t border-gray-200 dark:border-gray-700 p-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center min-w-0">
+                        <template x-if="user.avatar">
+                            <div class="flex-shrink-0 relative">
+                                <img class="h-10 w-10 rounded-full ring-2 ring-white dark:ring-gray-800" 
+                                     :src="user.avatar" 
+                                     alt="User avatar">
+                                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+                            </div>
+                        </template>
+                        <template x-if="!user.avatar">
+                            <div class="flex-shrink-0 relative">
+                                <div class="h-10 w-10 rounded-full ring-2 ring-white dark:ring-gray-800 bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
+                                    <span class="text-white font-medium text-sm" x-text="user.nickname?.charAt(0) || user.username?.charAt(0)?.toUpperCase() || 'U'"></span>
+                                </div>
+                                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+                            </div>
+                        </template>
+                        <div x-show="!collapsed" 
+                             class="ml-3 min-w-0 flex-1 transition-opacity duration-300"
+                             x-transition:enter="transition-opacity ease-out duration-300"
+                             x-transition:enter-start="opacity-0"
+                             x-transition:enter-end="opacity-100"
+                             x-transition:leave="transition-opacity ease-in duration-200"
+                             x-transition:leave-start="opacity-100"
+                             x-transition:leave-end="opacity-0">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate" x-text="user.nickname || user.username"></p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate" x-text="user.role?.name || '未知角色'"></p>
+                        </div>
+                    </div>
+                    <div x-show="!collapsed" 
+                         class="ml-2 transition-opacity duration-300"
+                         x-transition:enter="transition-opacity ease-out duration-300"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition-opacity ease-in duration-200"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0">
+                        <button @click="logout" 
+                                class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200"
+                                title="退出登录">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <!-- 收起状态下的退出按钮 -->
+                <div x-show="collapsed" 
+                     class="mt-2 flex justify-center transition-opacity duration-300"
+                     x-transition:enter="transition-opacity ease-out duration-300"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition-opacity ease-in duration-200"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0">
+                    <button @click="logout" 
+                            class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200"
+                            title="退出登录">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="flex-1 flex flex-col min-h-screen">
+            <!-- 顶部导栏 -->
+            <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-6 shadow-sm">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-800 dark:text-white">{{ .Title }}</h1>
+                    <nav class="hidden sm:flex ml-8 space-x-1">
+                        <a href="/admin" 
+                           class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                           :class="currentPath === '/admin' ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'">
+                            仪表盘
+                        </a>
+                        <a href="/admin/settings" 
+                           class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                           :class="currentPath === '/admin/settings' ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'">
+                            设置
+                        </a>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- 搜索框 -->
+                    <div class="hidden md:flex items-center" x-data="{ searchOpen: false, searchFocused: false }">
+                        <div class="relative">
+                            <input type="text" 
+                                   placeholder="搜索..." 
+                                   @focus="searchOpen = true; searchFocused = true"
+                                   @blur="searchFocused = false; setTimeout(() => { if (!searchFocused) searchOpen = false }, 200)"
+                                   @keydown.escape="searchOpen = false"
+                                   class="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            
+                            <!-- 搜索结果下拉框 -->
+                            <div x-cloak x-show="searchOpen" 
+                                 @mouseenter="searchFocused = true"
+                                 @mouseleave="searchFocused = false"
+                                 @click.stop=""
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 class="absolute right-0 mt-2 w-96 rounded-lg shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50">
+                                <div class="p-2">
+                                    <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">快速导航</div>
+                                    <a href="/admin/menus" class="block px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+                                        <div class="flex items-center">
+                                            <span x-html="menuIcons.menu" class="w-5 h-5 text-gray-400 mr-3"></span>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-900 dark:text-white">菜单管理</div>
+                                                <div class="text-xs text-gray-500 dark:text-gray-400">管理系统菜单和权限</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 主题切换开关 -->
+                    <button @click="toggleTheme()" 
+                            class="relative inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                            :class="{
+                                'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600': theme === 'light',
+                                'bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700': theme === 'dark'
+                            }">
+                        <div class="relative w-5 h-5">
+                            <div class="absolute inset-0 transition-all duration-300"
+                                 :class="{'opacity-100 rotate-0': theme === 'light', 'opacity-0 -rotate-90': theme === 'dark'}">
+                                <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="absolute inset-0 transition-all duration-300"
+                                 :class="{'opacity-0 rotate-90': theme === 'light', 'opacity-100 rotate-0': theme === 'dark'}">
+                                <svg class="w-5 h-5 text-blue-200" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <span class="ml-2" 
+                              :class="{'text-gray-900 dark:text-gray-100': theme === 'light', 'text-white': theme === 'dark'}"
+                              x-text="theme === 'dark' ? '暗色' : '浅色'">
+                        </span>
+                    </button>
+
+                    <!-- 用户菜单 -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" 
+                                class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none">
+                            <template x-if="user.avatar">
+                                <img class="h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800" 
+                                     :src="user.avatar" 
+                                     alt="User avatar">
+                            </template>
+                            <template x-if="!user.avatar">
+                                <div class="h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
+                                    <span class="text-white font-medium text-sm" x-text="user.nickname?.charAt(0) || user.username?.charAt(0)?.toUpperCase() || 'U'"></span>
+                                </div>
+                            </template>
+                            <div class="hidden sm:block text-left">
+                                <div class="text-sm font-medium text-gray-700 dark:text-gray-300" x-text="user.nickname || user.username"></div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400" x-text="user.role?.name || '未知角色'"></div>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <!-- 下拉菜单 -->
+                        <div x-cloak x-show="open" 
+                             @click.away="open = false"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 dark:divide-gray-700 z-50">
+                            <div class="py-1">
+                                <a href="/admin/profile" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    个人信息
+                                </a>
+                                <button @click="logout" class="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    退出登录
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 标签栏 -->
+            <div class="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+                <div class="px-4 flex items-center h-10 space-x-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+                    <template x-for="tab in recentTabs" :key="tab.path">
+                        <div class="flex items-center h-8 px-3 text-sm rounded-lg transition-colors duration-200 whitespace-nowrap"
+                             :class="{
+                                 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400': currentPath === tab.path,
+                                 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700': currentPath !== tab.path
+                             }">
+                            <a @click.prevent="navigate(tab.path)" 
+                               :href="tab.path" 
+                               class="flex items-center">
+                                <span x-text="tab.name"></span>
+                            </a>
+                            <button @click="closeTab(tab.path)" 
+                                    class="ml-2 p-0.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 页面内容 -->
+            <main class="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900 relative">
+                {{ embed }}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('notification', {
+                notifications: [],
+                notificationCount: 0,
+                show(message, type = 'success') {
+                    const id = ++this.notificationCount;
+                    const notification = {
+                        id,
+                        message,
+                        type,
+                        show: true,
+                        progress: 100
+                    };
+                    
+                    this.notifications.push(notification);
+                    
+                    setTimeout(() => {
+                        notification.progress = 0;
+                        setTimeout(() => {
+                            notification.show = false;
+                            setTimeout(() => {
+                                this.notifications = this.notifications.filter(n => n.id !== id);
+                            }, 300);
+                        }, 2000);
+                    }, 100);
+                }
+            });
+        });
+    </script>
+    <script>
+        function adminLayout() {
+            return {
+                user: JSON.parse(localStorage.getItem('user') || '{}'),
+                collapsed: localStorage.getItem('menuCollapsed') === 'true',
+                mobileMenuOpen: false,
+                theme: localStorage.theme || 'light',
+                currentPath: window.location.pathname,
+                expandedGroup: localStorage.getItem('expandedMenuGroup'),
+                recentTabs: [],
+                maxTabs: 8,
+                menuTree: [],
+                loading: false,
+                justCollapsed: false,
+                menuIcons: {
+                    default: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>',
+                    home: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>',
+                    system: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>',
+                    filemanager: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>',
+                    imagemanager: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>',
+                    reposync: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>',
+                    user: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>',
+                    role: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>',
+                    permission: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>',
+                    menu: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>',
+                    adminlog: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>',
+                    game: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>',
+                    gamelog: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h.01M15 17h.01" /></svg>',
+                    stats: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>',
+                    tools: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>',
+                    browse: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>',
+                    upload: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>',
+                    serverconf: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>',
+                    terminal: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>',
+                    package: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>',
+                    citask: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>',
+                    gameconf: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m-6-8h6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v2m0 12v2M3 12h2m14 0h2" /></svg>',
+                    patch: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>',
+                    parameter: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>',
+                    luban: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" /></svg>'
+                },
+                get recentTabsKey() {
+                    return 'recentTabs_'+this.user.id;
+                },
+                async loadMenus() {
+                    try {
+                        const response = await fetch('/api/menus/public/tree');
+                        if (!response.ok) throw new Error('加载菜单失败');
+                        this.menuTree = await response.json();
+                        
+                        // 加载菜单后，只初始化标签，不自动展开菜单
+                        this.initializeTabs();
+                        
+                        // 如果菜单是展开状态，并且localStorage中有保存的展开组，则恢复
+                        if (!this.collapsed) {
+                            const savedGroup = localStorage.getItem('expandedMenuGroup');
+                            if (savedGroup) {
+                                this.expandedGroup = parseInt(savedGroup);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Failed to load menus:', error);
+                        Alpine.store('notification').show('加载菜单失败', 'error');
+                    }
+                },
+                initializeTabs() {
+                    // 从 localStorage 获取保存的标签
+                    const savedTabs = JSON.parse(localStorage.getItem(this.recentTabsKey) || '[]');
+                    this.recentTabs = savedTabs;
+                },
+                hasPermission(permission) {
+                    // 如果没有配置权限，则不显示
+                    if (!permission) return false;
+                    
+                    // 检查用户是否存在且有角色
+                    if (!this.user || !this.user.role) return false;
+                    
+                    // 获取用户权限列表
+                    const userPermissions = this.user.role.permissions?.map(p => p.code) || [];
+                    
+                    // 如果用户有 admin 权限，允许访问所有内容
+                    if (userPermissions.includes('admin')) return true;
+                    
+                    // 检查具体权限
+                    return userPermissions.includes(permission);
+                },
+                hasMenuPermission(menuItem) {
+                    // 如果是父菜单，检查是否有可见的子菜单
+                    if (menuItem.children && menuItem.children.length > 0) {
+                        return this.hasVisibleChildren(menuItem);
+                    }
+                    
+                    // 如果是子菜单或没有子菜单的菜单项，检查自身权限
+                    return this.hasPermission(menuItem.menu.permission);
+                },
+                hasVisibleChildren(menuItem) {
+                    // 检查是否有任何子菜单有权限显示
+                    return menuItem.children && menuItem.children.some(child => this.hasPermission(child.menu.permission));
+                },
+                getMenuName(path) {
+                    // 首页特殊处理
+                    if (path === '/admin') return '首页';
+
+                    // 在菜单树中查找
+                    for (const menu of this.menuTree) {
+                        if (menu.menu.path === path) {
+                            return menu.menu.name;
+                        }
+                        for (const child of menu.children) {
+                            if (child.menu.path === path) {
+                                return child.menu.name;
+                            }
+                        }
+                    }
+                    return path;
+                },
+                addTab(path) {
+                    // 检查路径是否在菜单中定义
+                    const isMenuPath = this.isPathInMenu(path);
+                    if (!isMenuPath) {
+                        return; // 如果路径不在菜单中，不添加标签
+                    }
+
+                    // 查找菜单项以获取标题
+                    const menuItem = this.findMenuItemByPath(path);
+                    if (!menuItem) {
+                        return; // 如果找不到对应的菜单项，不添加标签
+                    }
+
+                    // 检查标签是否已存在
+                    const existingTabIndex = this.recentTabs.findIndex(tab => tab.path === path);
+                    if (existingTabIndex !== -1) {
+                        // 如果标签已存在，将其移动到最后
+                        const tab = this.recentTabs.splice(existingTabIndex, 1)[0];
+                        this.recentTabs.push(tab);
+                    } else {
+                        // 如果标签不存在，添加新标签
+                        this.recentTabs.push({
+                            path: path,
+                            title: menuItem.name
+                        });
+
+                        // 如果标签数量超过最大值，移除最早的标签
+                        if (this.recentTabs.length > this.maxTabs) {
+                            this.recentTabs.shift();
+                        }
+                    }
+
+                    // 保存到 localStorage
+                    localStorage.setItem(this.recentTabsKey, JSON.stringify(this.recentTabs));
+                },
+                // 检查路径是否在菜单中定义
+                isPathInMenu(path) {
+                    return this.findMenuItemByPath(path) !== null;
+                },
+                // 在菜单树中查找指定路径的菜单项
+                findMenuItemByPath(path) {
+                    const searchInMenu = (items) => {
+                        for (const item of items) {
+                            // 检查当前菜单
+                            if (item.menu && item.menu.path === path) {
+                                return item.menu;
+                            }
+                            // 检查子菜单项
+                            if (item.children && item.children.length > 0) {
+                                const found = searchInMenu(item.children);
+                                if (found) return found;
+                            }
+                        }
+                        return null;
+                    };
+                    return searchInMenu(this.menuTree);
+                },
+                closeTab(path) {
+                    const index = this.recentTabs.findIndex(tab => tab.path === path);
+                    if (index === -1) return;
+
+                    this.recentTabs.splice(index, 1);
+                    localStorage.setItem(this.recentTabsKey, JSON.stringify(this.recentTabs));
+
+                    // 如果关闭的是当前标签，导航到前一个标签
+                    if (path === this.currentPath) {
+                        const prevTab = this.recentTabs[Math.max(0, index - 1)];
+                        if (prevTab) {
+                            this.navigate(prevTab.path);
+                        } else {
+                            this.navigate('/admin');
+                        }
+                    }
+                },
+                navigate(path) {
+                    if (this.loading || path === this.currentPath) return;
+                    this.loading = true;
+
+                    try {
+                        window.location.href = path;
+                    } catch (error) {
+                        console.error('Navigation error:', error);
+                        Alpine.store('notification').show(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                toggleMenuGroup(group) {
+                    if (this.expandedGroup === group) {
+                        this.expandedGroup = null;
+                        localStorage.removeItem('expandedMenuGroup');
+                    } else {
+                        this.expandedGroup = group;
+                        localStorage.setItem('expandedMenuGroup', group);
+                    }
+                },
+                toggleTheme() {
+                    this.theme = this.theme === 'light' ? 'dark' : 'light';
+                    localStorage.setItem('theme', this.theme);
+                    
+                    if (this.theme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                },
+                toggleCollapse() {
+                    this.collapsed = !this.collapsed;
+                    localStorage.setItem('menuCollapsed', this.collapsed);
+                    if (this.collapsed) {
+                        this.justCollapsed = true;
+                        this.expandedGroup = null;
+                        // 300ms 后重置 justCollapsed，这个时间要比菜单收起的动画时间长
+                        setTimeout(() => {
+                            this.justCollapsed = false;
+                        }, 300);
+                    }
+                },
+                logout() {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    // post 请求 /logout
+                    window.location.href = '/logout';
+                },
+                init() {
+                    // 检查登录状态
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        window.location.href = '/login';
+                        return;
+                    }
+
+                    // 设置初始主题
+                    if (this.theme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+
+                    // 加载菜单数据
+                    this.loadMenus();
+
+                    // 初始化时不显示浮动子菜单
+                    this.justCollapsed = true;
+                    setTimeout(() => {
+                        this.justCollapsed = false;
+                    }, 300);
+                },
+                // 查找当前路径对应的菜单项及其父菜单
+                findCurrentMenu(items = this.menuTree, parent = null) {
+                    for (const item of items) {
+                        // 检查当前菜单项
+                        if (item.menu.path === this.currentPath) {
+                            return { current: item.menu, parent };
+                        }
+                        // 检查子菜单项
+                        if (item.children && item.children.length > 0) {
+                            const found = this.findCurrentMenu(item.children, item.menu);
+                            if (found) return found;
+                        }
+                    }
+                    return null;
+                },
+                // 展开当前菜单的父菜单
+                expandCurrentMenuParent() {
+                    const found = this.findCurrentMenu();
+                    if (found && found.parent) {
+                        this.expandedGroup = found.parent.id;
+                        localStorage.setItem('expandedMenuGroup', found.parent.id);
+                    }
+                },
+                async navigate(path) {
+                    if (this.loading || path === this.currentPath) return;
+                    this.loading = true;
+
+                    // 更新当前路径
+                    this.currentPath = path;
+                    
+                    // 更新标签
+                    const menuInfo = this.findCurrentMenu();
+                    if (menuInfo) {
+                        const { current } = menuInfo;
+                        
+                        // 添加到最近标签
+                        const existingTabIndex = this.recentTabs.findIndex(tab => tab.path === path);
+                        if (existingTabIndex === -1) {
+                            // 添加新标签
+                            this.recentTabs.push({
+                                path: current.path,
+                                name: current.name
+                            });
+                            // 如果超过最大数量，删除最早的标签
+                            if (this.recentTabs.length > this.maxTabs) {
+                                this.recentTabs.shift();
+                            }
+                            // 保存到 localStorage
+                            localStorage.setItem(this.recentTabsKey, JSON.stringify(this.recentTabs));
+                        }
+                    }
+
+                    // 如果菜单是收起状态，确保不会展开
+                    if (this.collapsed) {
+                        this.expandedGroup = null;
+                        this.justCollapsed = true;
+                        setTimeout(() => {
+                            this.justCollapsed = false;
+                        }, 300);
+                    }
+
+                    try {
+                        window.location.href = path;
+                    } catch (error) {
+                        console.error('Navigation error:', error);
+                        Alpine.store('notification').show(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 页面特定的脚本 -->
+    {{if .Scripts}}
+        {{range .Scripts}}
+            <script src="{{.}}"></script>
+        {{end}}
+    {{end}}
+</body>
+</html>

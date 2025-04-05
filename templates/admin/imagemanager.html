@@ -1,0 +1,185 @@
+<!-- 图片管理页面 -->
+<div x-data="imagemanagerManagement()" class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">图片管理</h2>
+        <!-- 按钮组 -->
+        <div class="mb-4 flex justify-end space-x-4">
+            <button @click="uploadImage" 
+                    class="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                上传图片
+            </button>
+        </div>
+    </div>
+
+    <!-- 图片列表 -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <template x-for="image in images" :key="image.id">
+            <div class="relative group">
+                <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
+                    <img :src="image.url" :alt="image.name"
+                         class="h-full w-full object-cover object-center group-hover:opacity-75">
+                </div>
+                <div class="mt-2">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate" x-text="image.name"></p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400" x-text="formatSize(image.size)"></p>
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-50 rounded-lg">
+                    <div class="flex space-x-2">
+                        <button @click="copyUrl(image)" 
+                                class="p-2 text-white hover:text-blue-400 transition-colors"
+                                title="复制链接">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                        </button>
+                        <button @click="viewImage(image)" 
+                                class="p-2 text-white hover:text-blue-400 transition-colors"
+                                title="查看">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                        <button @click="deleteImage(image)" 
+                                class="p-2 text-white hover:text-red-400 transition-colors"
+                                title="删除">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- 上传图片模态框 -->
+    <div x-cloak x-show="showUploadModal" 
+         class="fixed inset-0 z-40 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="showUploadModal = false"></div>
+
+            <div class="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">上传图片</h3>
+                </div>
+
+                <form @submit.prevent="submitUpload">
+                    <div class="px-6 py-4 space-y-4">
+                        <div class="flex justify-center items-center w-full">
+                            <label class="flex flex-col w-full h-32 border-4 border-dashed rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500">
+                                <div class="flex flex-col items-center justify-center pt-7">
+                                    <svg class="w-8 h-8 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
+                                    <p class="pt-1 text-sm tracking-wider text-gray-400 group-hover:text-gray-600">
+                                        点击选择图片或拖拽图片到此处
+                                    </p>
+                                </div>
+                                <input type="file" class="opacity-0" multiple accept="image/*" @change="handleImageSelect" />
+                            </label>
+                        </div>
+                        <div class="space-y-2">
+                            <template x-for="(image, index) in selectedImages" :key="index">
+                                <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                                    <div class="flex items-center space-x-2">
+                                        <img :src="image.preview" class="h-10 w-10 object-cover rounded">
+                                        <span class="text-sm text-gray-700 dark:text-gray-300" x-text="image.file.name"></span>
+                                    </div>
+                                    <button type="button" @click="removeImage(index)"
+                                            class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-3">
+                        <button type="button" @click="showUploadModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            取消
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            上传
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片预览模态框 -->
+    <div x-cloak x-show="showPreviewModal" 
+         class="fixed inset-0 z-50 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-90" @click="showPreviewModal = false"></div>
+
+            <div class="inline-block w-full max-w-4xl my-8 overflow-hidden text-left align-middle transition-all transform">
+                <div class="relative">
+                    <img :src="currentImage?.url" :alt="currentImage?.name"
+                         class="max-h-[80vh] mx-auto rounded-lg shadow-xl">
+                    <button @click="showPreviewModal = false"
+                            class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-white" x-text="currentImage?.name"></p>
+                    <p class="text-xs text-gray-400" x-text="formatSize(currentImage?.size)"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.image-card {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.image-card .card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+.image-card .card-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+}
+
+.image-card:hover .card-actions {
+    display: block;
+}
+
+.image-card .card-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    margin-left: 2px;
+}
+</style>

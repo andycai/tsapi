@@ -1,0 +1,381 @@
+<!-- 项目和问题跟踪管理页面 -->
+<div x-data="bugtrackerManagement()" class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">项目和问题跟踪</h2>
+        <!-- 按钮组 -->
+        <div class="mb-4 flex justify-end space-x-4">
+            <button @click="createProject" 
+                    class="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                新建项目
+            </button>
+        </div>
+    </div>
+
+    <!-- 项目列表 -->
+    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">项目名称</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">状态</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">创建时间</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                <template x-for="project in projects" :key="project.id">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200">
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="project.name"></span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400" x-text="project.description"></span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                  :class="{
+                                      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': project.status === 'active',
+                                      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200': project.status === 'archived'
+                                  }"
+                                  x-text="project.status === 'active' ? '活跃' : '已归档'">
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" x-text="formatDate(project.created_at)"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button @click="viewProject(project)" 
+                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                查看
+                            </button>
+                            <button @click="editProject(project)" 
+                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                编辑
+                            </button>
+                            <button @click="deleteProject(project.id)" 
+                                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                删除
+                            </button>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 项目表单模态框 -->
+    <div x-cloak x-show="showProjectModal" 
+         class="fixed inset-0 z-40 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="showProjectModal = false"></div>
+
+            <div class="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white" x-text="editMode ? '编辑项目' : '新建项目'"></h3>
+                </div>
+
+                <form @submit.prevent="submitProject">
+                    <div class="px-6 py-4 space-y-4">
+                        <!-- 基本信息 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">项目名称</label>
+                            <input type="text" x-model="form.name" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">描述</label>
+                            <textarea x-model="form.description"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    rows="3"></textarea>
+                        </div>
+
+                        <!-- 项目状态 -->
+                        <div class="flex items-center">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" x-model="form.status" value="active"
+                                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">项目活跃</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-3">
+                        <button type="button" @click="showProjectModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            取消
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            确定
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 项目详情模态框 -->
+    <div x-cloak x-show="showProjectDetailModal" 
+         class="fixed inset-0 z-40 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="showProjectDetailModal = false"></div>
+
+            <div class="inline-block w-full max-w-4xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white" x-text="currentProject?.name"></h3>
+                        <button @click="createIssue" 
+                                class="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            新建问题
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 问题列表 -->
+                <div class="px-6 py-4">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-800">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">问题</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">状态</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">优先级</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">创建时间</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                                <template x-for="issue in currentProjectIssues" :key="issue.id">
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="issue.title"></span>
+                                                <span class="text-xs text-gray-500 dark:text-gray-400" x-text="issue.description"></span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                                  :class="{
+                                                      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': issue.status === 'open',
+                                                      'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': issue.status === 'in_progress',
+                                                      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': issue.status === 'resolved',
+                                                      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200': issue.status === 'closed'
+                                                  }"
+                                                  x-text="getIssueStatusText(issue.status)">
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                                  :class="{
+                                                      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': issue.priority === 'high',
+                                                      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': issue.priority === 'medium',
+                                                      'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': issue.priority === 'low'
+                                                  }"
+                                                  x-text="getIssuePriorityText(issue.priority)">
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" x-text="formatDate(issue.created_at)"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                            <button @click="viewIssue(issue)" 
+                                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                                查看
+                                            </button>
+                                            <button @click="editIssue(issue)" 
+                                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                                编辑
+                                            </button>
+                                            <button @click="deleteIssue(issue.id)" 
+                                                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                                删除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 问题表单模态框 -->
+    <div x-cloak x-show="showIssueModal" 
+         class="fixed inset-0 z-50 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="showIssueModal = false"></div>
+
+            <div class="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white" x-text="editMode ? '编辑问题' : '新建问题'"></h3>
+                </div>
+
+                <form @submit.prevent="submitIssue">
+                    <div class="px-6 py-4 space-y-4">
+                        <!-- 基本信息 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">标题</label>
+                            <input type="text" x-model="issueForm.title" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">描述</label>
+                            <textarea x-model="issueForm.description"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    rows="3"></textarea>
+                        </div>
+
+                        <!-- 状态和优先级 -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">状态</label>
+                                <select x-model="issueForm.status"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                    <option value="open">待处理</option>
+                                    <option value="in_progress">处理中</option>
+                                    <option value="resolved">已解决</option>
+                                    <option value="closed">已关闭</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">优先级</label>
+                                <select x-model="issueForm.priority"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                    <option value="low">低</option>
+                                    <option value="medium">中</option>
+                                    <option value="high">高</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-3">
+                        <button type="button" @click="showIssueModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            取消
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            确定
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 问题详情模态框 -->
+    <div x-cloak x-show="showIssueDetailModal" 
+         class="fixed inset-0 z-50 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="showIssueDetailModal = false"></div>
+
+            <div class="inline-block w-full max-w-4xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white" x-text="currentIssue?.title"></h3>
+                </div>
+
+                <div class="px-6 py-4 space-y-4">
+                    <template x-if="currentIssue">
+                        <div>
+                            <!-- 问题状态和优先级 -->
+                            <div class="flex space-x-4 mb-4">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                      :class="{
+                                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': currentIssue.status === 'open',
+                                          'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': currentIssue.status === 'in_progress',
+                                          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': currentIssue.status === 'resolved',
+                                          'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200': currentIssue.status === 'closed'
+                                      }"
+                                      x-text="getIssueStatusText(currentIssue.status)">
+                                </span>
+                                <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                      :class="{
+                                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': currentIssue.priority === 'high',
+                                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': currentIssue.priority === 'medium',
+                                          'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': currentIssue.priority === 'low'
+                                      }"
+                                      x-text="getIssuePriorityText(currentIssue.priority)">
+                                </span>
+                            </div>
+
+                            <!-- 问题描述 -->
+                            <div class="mb-4">
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">描述</h4>
+                                <div class="text-sm text-gray-600 dark:text-gray-400" x-text="currentIssue.description"></div>
+                            </div>
+
+                            <!-- 评论列表 -->
+                            <div class="mb-4">
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">评论</h4>
+                                <div class="space-y-4">
+                                    <template x-for="comment in currentIssueComments" :key="comment.id">
+                                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                            <div class="flex justify-between items-start">
+                                                <div class="text-sm text-gray-600 dark:text-gray-400" x-text="comment.content"></div>
+                                                <div class="text-xs text-gray-500 dark:text-gray-400" x-text="formatDate(comment.created_at)"></div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- 添加评论 -->
+                            <div>
+                                <form @submit.prevent="submitComment">
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">添加评论</label>
+                                        <textarea x-model="commentForm.content" required
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                                rows="3"></textarea>
+                                    </div>
+                                    <div class="flex justify-end">
+                                        <button type="submit"
+                                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                            提交评论
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end">
+                    <button type="button" @click="showIssueDetailModal = false"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

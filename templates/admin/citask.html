@@ -1,0 +1,647 @@
+<!-- 任务管理页面 -->
+<div x-data="taskManagement()" class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">任务管理</h2>
+        <!-- 按钮组 -->
+        <div class="mb-4 flex justify-end space-x-4">
+            <button @click="showRunningTasks" 
+                    class="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                </svg>
+                正在执行的任务
+            </button>
+            <button @click="createTask"
+                    class="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                新建任务
+            </button>
+        </div>
+    </div>
+
+    <!-- 任务列表 -->
+    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">任务名称</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">类型</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">状态</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">最后执行</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                <template x-for="task in tasks" :key="task.id">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200">
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="task.name"></span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400" x-text="task.description"></span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                  :class="{
+                                      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': task.type === 'script',
+                                      'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': task.type === 'http'
+                                  }"
+                                  x-text="task.type === 'script' ? '脚本' : 'HTTP'">
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                  :class="{
+                                      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': task.status === 'active',
+                                      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200': task.status === 'inactive'
+                                  }"
+                                  x-text="task.status === 'active' ? '启用' : '禁用'">
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" x-text="formatDate(task.updated_at)"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button @click="runTask(task)" 
+                                    class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+                                执行
+                            </button>
+                            <button @click="viewLogs(task)" 
+                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                日志
+                            </button>
+                            <button @click="editTask(task)" 
+                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                编辑
+                            </button>
+                            <button @click="deleteTask(task.id)" 
+                                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                删除
+                            </button>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 任务表单模态框 -->
+    <div x-cloak x-show="showTaskModal" 
+         class="fixed inset-0 z-40 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="showTaskModal = false"></div>
+
+            <div class="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white" x-text="editMode ? '编辑任务' : '新建任务'"></h3>
+                </div>
+
+                <form @submit.prevent="submitTask">
+                    <div class="px-6 py-4 space-y-4">
+                        <!-- 复制任务搜索框 -->
+                        <div x-show="!editMode" class="relative">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">复制现有任务</label>
+                            <div class="mt-1 relative">
+                                <input type="text" 
+                                       x-model="searchKeyword" 
+                                       @input="searchTasks"
+                                       @focus="showSearchDropdown = true"
+                                       @click.away="showSearchDropdown = false"
+                                       @keydown.down.prevent="selectNextResult"
+                                       @keydown.up.prevent="selectPreviousResult"
+                                       @keydown.enter.prevent="selectTask"
+                                       @keydown.esc="showSearchDropdown = false"
+                                       placeholder="输入任务名称搜索..."
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                                
+                                <!-- 搜索结果下拉框 -->
+                                <div x-show="showSearchDropdown && searchResults.length > 0" 
+                                     class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                    <template x-for="(task, index) in searchResults" :key="task.id">
+                                        <div @click="copyTask(task)" 
+                                             @mouseover="selectedIndex = index"
+                                             class="cursor-pointer select-none relative py-2 pl-3 pr-9"
+                                             :class="{ 
+                                                 'text-gray-900 dark:text-white': selectedIndex !== index,
+                                                 'text-white bg-blue-600 dark:bg-blue-700': selectedIndex === index 
+                                             }">
+                                            <span x-text="task.name" class="block truncate"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">搜索并选择要复制的任务，选择后可以修改任务名称创建新任务</p>
+                        </div>
+
+                        <!-- 基本信息 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">任务名称</label>
+                            <input type="text" x-model="form.name" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">描述</label>
+                            <textarea x-model="form.description"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    rows="2"></textarea>
+                        </div>
+
+                        <!-- 任务类型 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">任务类型</label>
+                            <select x-model="form.type"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                <option value="script">脚本</option>
+                                <option value="http">HTTP</option>
+                            </select>
+                        </div>
+
+                        <!-- 脚本任务配置 -->
+                        <template x-if="form.type === 'script'">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">脚本内容</label>
+                                <textarea x-model="form.script" required
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 font-mono"
+                                        rows="10"></textarea>
+                            </div>
+                        </template>
+
+                        <!-- HTTP任务配置 -->
+                        <template x-if="form.type === 'http'">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">请求URL</label>
+                                    <input type="url" x-model="form.url" required
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">请求方法</label>
+                                    <select x-model="form.method"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                        <option value="GET">GET</option>
+                                        <option value="POST">POST</option>
+                                        <option value="PUT">PUT</option>
+                                        <option value="DELETE">DELETE</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">请求头</label>
+                                    <textarea x-model="form.headers"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 font-mono"
+                                            rows="3"
+                                            placeholder='{"Content-Type": "application/json"}'></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">请求体</label>
+                                    <textarea x-model="form.body"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 font-mono"
+                                            rows="5"></textarea>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- 通用配置 -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">超时时间(秒)</label>
+                                <input type="number" x-model.number="form.timeout" required min="1"
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <div class="flex items-center">
+                                <label class="inline-flex items-center mt-6">
+                                    <input type="checkbox" x-model="form.status" value="active"
+                                        class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">启用任务</span>
+                                    
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 添加定时执行配置 -->
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="enableCron" x-model="form.enable_cron"
+                                    @change="form.enable_cron = $event.target.checked ? 1 : 0" :checked="form.enable_cron == 1"
+                                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-600">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                    启用定时执行
+                                </span>
+                            </div>
+                            
+                            <div x-show="form.enable_cron" class="space-y-2">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cron 表达式</label>
+                                    <div class="mt-1 relative rounded-md shadow-sm">
+                                        <input type="text" x-model="form.cron_expr"
+                                               placeholder="*/5 * * * *"
+                                               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                            <button @click="showCronHelper = true" type="button"
+                                                    class="text-gray-400 hover:text-gray-500">
+                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                        下次执行时间：<span x-text="getNextRunTime(form.cron_expr) || '无效的表达式'"></span>
+                                    </p>
+                                </div>
+
+                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                    <p>常用示例：</p>
+                                    <ul class="list-disc list-inside space-y-1 ml-2">
+                                        <li>每5分钟执行一次：*/5 * * * *</li>
+                                        <li>每小时执行一次：0 * * * *</li>
+                                        <li>每天凌晨2点执行：0 2 * * *</li>
+                                        <li>每周一凌晨3点执行：0 3 * * 1</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-3">
+                        <button type="button" @click="showTaskModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            取消
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            确定
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 日志模态框 -->
+    <div x-cloak x-show="showLogsModal" class="fixed inset-0 z-40 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+            </div>
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <!-- 模态框头部 -->
+                <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">执行日志</h3>
+                    <button @click="showLogsModal = false" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <span class="sr-only">关闭</span>
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <!-- 模态框内容 -->
+                <div class="px-4 py-4">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-800">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">#ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">开始时间</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">状态</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">耗时</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                                <template x-for="log in paginatedLogs" :key="log.id">
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" x-text="'#' + log.id"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100" x-text="formatDate(log.start_time)"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span x-html="getStatusBadge(log.status)"></span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" x-text="log.duration + '秒'"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button @click="viewLog(log)" 
+                                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">查看
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 日志详情模态框 -->
+    <div x-cloak x-show="showLogDetailModal" 
+         class="fixed inset-0 z-40 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="showLogDetailModal = false"></div>
+
+            <div class="inline-block w-full max-w-4xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">执行详情</h3>
+                </div>
+
+                <div class="px-6 py-4 space-y-4">
+                    <template x-if="currentTaskLog">
+                        <div>
+                            <!-- 执行状态 -->
+                            <div class="mb-4">
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">执行状态</h4>
+                                <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                      :class="{
+                                          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': currentTaskLog.status === 'success',
+                                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': currentTaskLog.status === 'failed',
+                                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': currentTaskLog.status === 'running'
+                                      }"
+                                      x-text="currentTaskLog.status === 'success' ? '成功' : (currentTaskLog.status === 'failed' ? '失败' : '执行中')">
+                                </span>
+                            </div>
+
+                            <!-- 执行时间 -->
+                            <div class="mb-4">
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">执行时间</h4>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">
+                                    <div>开始时间：<span x-text="formatDate(currentTaskLog.start_time)"></span></div>
+                                    <div>结束时间：<span x-text="formatDate(currentTaskLog.end_time)"></span></div>
+                                    <div>执行时长：<span x-text="currentTaskLog.duration + '秒'"></span></div>
+                                </div>
+                            </div>
+
+                            <!-- 执行输出 -->
+                            <div class="mb-4">
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">执行输出</h4>
+                                <pre class="mt-1 p-4 bg-gray-100 dark:bg-gray-900 rounded-md overflow-x-auto text-sm font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-all"
+                                     x-text="currentTaskLog.output || '无输出'"></pre>
+                            </div>
+
+                            <!-- 错误信息 -->
+                            <template x-if="currentTaskLog.error">
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">错误信息</h4>
+                                    <pre class="mt-1 p-4 bg-red-50 dark:bg-red-900 rounded-md overflow-x-auto text-sm font-mono text-red-800 dark:text-red-200 whitespace-pre-wrap break-all"
+                                         x-text="currentTaskLog.error"></pre>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end">
+                    <button type="button" @click="showLogDetailModal = false"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务进度模态框 -->
+    <div x-cloak x-show="showProgressModal" 
+         class="fixed inset-0 z-40 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 dark:bg-gray-900 bg-opacity-75" @click="closeProgress"></div>
+
+            <div class="inline-block w-full max-w-4xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <!-- 模态框头部 -->
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <div class="flex-grow">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white" x-text="currentTask?.name || '执行进度'"></h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            开始时间：<span x-text="formatDate(currentTaskLog?.start_time)"></span>
+                        </p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button x-show="currentTaskLog?.status === 'running'"
+                                @click="stopTask"
+                                class="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 border border-red-600 dark:border-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900 transition-colors duration-200">
+                            停止任务
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 模态框内容 -->
+                <div class="px-6 py-4 space-y-4">
+                    <!-- 状态和进度条 -->
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-2">
+                            <span x-html="getStatusBadge(currentTaskLog?.status)"></span>
+                            <span x-show="currentTaskLog?.status === 'running'" 
+                                  class="text-sm text-gray-500 dark:text-gray-400" 
+                                  x-text="'运行时间：' + getRunningTime(currentTaskLog)">
+                            </span>
+                        </div>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300" 
+                              x-text="currentTaskLog?.progress + '%'">
+                        </span>
+                    </div>
+                    <div class="relative pt-1">
+                        <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-200 dark:bg-gray-700">
+                            <div :style="'width: ' + (currentTaskLog?.progress || 0) + '%'"
+                                 :class="{
+                                     'bg-green-500': currentTaskLog?.status === 'success',
+                                     'bg-red-500': currentTaskLog?.status === 'failed',
+                                     'bg-blue-500 animate-pulse': currentTaskLog?.status === 'running'
+                                 }"
+                                 class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 输出内容 -->
+                    <div class="mt-4">
+                        <div class="mb-2 flex justify-between items-center">
+                            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">输出内容</h4>
+                            <button @click="scrollToBottom(true)" 
+                                    class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center space-x-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                                </svg>
+                                <span>滚动到底部</span>
+                            </button>
+                        </div>
+                        <div x-ref="outputLog"
+                             class="relative h-[480px] overflow-y-auto"
+                             @scroll="handleScroll">
+                            <pre class="p-4 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-all"
+                                 x-text="currentTaskLog?.output || '暂无输出'"></pre>
+                        </div>
+                    </div>
+
+                    <!-- 错误信息 -->
+                    <div x-show="currentTaskLog?.error" class="mt-4">
+                        <h4 class="mb-2 text-sm font-medium text-red-600 dark:text-red-400">错误信息</h4>
+                        <pre class="whitespace-pre-wrap break-all p-4 rounded-md bg-red-50 dark:bg-red-900 text-red-600 dark:text-red-400 text-sm font-mono"
+                             x-text="currentTaskLog?.error">
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 浮动分页控件 -->
+    <div x-cloak x-show="showLogsModal" class="fixed right-[calc(50%-32rem)] top-24 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 space-y-2 z-50">
+        <button @click="firstPage" 
+                :disabled="currentPage === 1" 
+                class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300" 
+                title="首页">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L10 6.414l-3.293 3.293a1 1 0 01-1.414 0zM5.293 14.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L10 11.414l-3.293 3.293a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+        <button @click="prevPage" 
+                :disabled="currentPage === 1" 
+                class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300" 
+                title="上一页">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+        <button @click="nextPage" 
+                :disabled="currentPage === totalPages" 
+                class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300" 
+                title="下一页">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- 正在执行的任务列表模态框 -->
+    <div x-cloak x-show="showRunningTasksModal" class="fixed inset-0 z-30 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+            </div>
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <!-- 模态框头部 -->
+                <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">正在执行的任务</h3>
+                    <button @click="showRunningTasksModal = false" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <span class="sr-only">关闭</span>
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <!-- 模态框内容 -->
+                <div class="px-4 py-4">
+                    <div class="space-y-4">
+                        <template x-for="task in runningTasks" :key="task.id">
+                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-base font-medium text-gray-900 dark:text-gray-100" x-text="task.name"></h4>
+                                    <span class="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">执行中</span>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+                                        <div class="bg-blue-600 h-2.5 rounded-full" :style="'width: ' + task.progress + '%'"></div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                    <p>开始时间：<span x-text="formatDateTime(task.start_time * 1000)"></span></p>
+                                    <p>运行时间：<span x-text="getRunningTime(task)"></span></p>
+                                </div>
+                                <div class="mt-2">
+                                    <button @click="viewTaskProgress(task)" class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                        查看详情
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="runningTasks.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                            暂无正在执行的任务
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cron 表达式帮助对话框 -->
+    <div x-cloak x-show="showCronHelper" 
+         class="fixed inset-0 z-50 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 dark:bg-gray-900 bg-opacity-75" @click="showCronHelper = false"></div>
+
+            <div class="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Cron 表达式说明</h3>
+                </div>
+                <div class="px-6 py-4">
+                    <div class="space-y-4">
+                        <p class="text-sm text-gray-700 dark:text-gray-300">Cron 表达式由5个字段组成，从左到右分别表示：</p>
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">字段</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">取值范围</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">说明</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <tr>
+                                    <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">分钟</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">0-59</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">每分钟的第几分</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">小时</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">0-23</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">每天的第几小时</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">日期</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">1-31</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">每月的第几天</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">月份</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">1-12</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">每年的第几月</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">星期</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">0-6</td>
+                                    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">每周的星期几（0=周日）</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end">
+                    <button @click="showCronHelper = false"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -1,0 +1,497 @@
+<div x-data="serverConfig()" class="container mx-auto px-4">
+    <!-- 标签页导航 -->
+    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+        <nav class="flex items-center -mb-px space-x-8" aria-label="Tabs">
+            <!-- 服务器列表标签 -->
+            <div class="flex items-center">
+                <button @click="currentTab = 'serverList'"
+                        :class="{
+                            'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400': currentTab === 'serverList',
+                            'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600': currentTab !== 'serverList'
+                        }"
+                        class="py-2 px-4 text-sm font-medium transition-colors duration-200 border-b-2 border-transparent">
+                    服务器列表
+                </button>
+                <a href="/api/game/serverlist" target="_blank" 
+                   class="ml-1 p-1 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700" 
+                   title="查看API">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- 最后登录服务器标签 -->
+            <div class="flex items-center">
+                <button @click="currentTab = 'lastServer'"
+                        :class="{
+                            'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400': currentTab === 'lastServer',
+                            'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600': currentTab !== 'lastServer'
+                        }"
+                        class="py-2 px-4 text-sm font-medium transition-colors duration-200 border-b-2 border-transparent">
+                    最后登录服务器
+                </button>
+                <a href="/api/game/lastserver" target="_blank" 
+                   class="ml-1 p-1 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700" 
+                   title="查看API">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- 服务器信息标签 -->
+            <div class="flex items-center">
+                <button @click="currentTab = 'serverInfo'"
+                        :class="{
+                            'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400': currentTab === 'serverInfo',
+                            'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600': currentTab !== 'serverInfo'
+                        }"
+                        class="py-2 px-4 text-sm font-medium transition-colors duration-200 border-b-2 border-transparent">
+                    服务器信息
+                </button>
+                <a href="/api/game/serverinfo" target="_blank" 
+                   class="ml-1 p-1 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700" 
+                   title="查看API">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- 公告列表标签 -->
+            <div class="flex items-center">
+                <button @click="currentTab = 'noticeList'"
+                        :class="{
+                            'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400': currentTab === 'noticeList',
+                            'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600': currentTab !== 'noticeList'
+                        }"
+                        class="py-2 px-4 text-sm font-medium transition-colors duration-200 border-b-2 border-transparent">
+                    公告列表
+                </button>
+                <a href="/api/game/noticelist" target="_blank" 
+                   class="ml-1 p-1 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700" 
+                   title="查看API">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- 公告数量标签 -->
+            <div class="flex items-center">
+                <button @click="currentTab = 'noticeNum'"
+                        :class="{
+                            'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400': currentTab === 'noticeNum',
+                            'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600': currentTab !== 'noticeNum'
+                        }"
+                        class="py-2 px-4 text-sm font-medium transition-colors duration-200 border-b-2 border-transparent">
+                    公告数量
+                </button>
+                <a href="/api/game/noticenum" target="_blank" 
+                   class="ml-1 p-1 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700" 
+                   title="查看API">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- 服务器列表内容 -->
+    <div x-show="currentTab === 'serverList'" x-cloak>
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-medium text-gray-900 dark:text-white">服务器列表</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead>
+                        <tr>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-700/50">ID</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-700/50">名称</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-700/50">状态</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-700/50">可用</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-700/50">合并ID</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-700/50">在线时间</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-700/50">端口</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-700/50">IP</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-700/50">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <template x-for="(server, index) in serverList.serverlist" :key="index">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <input type="text" x-model="server.server_id" placeholder="ID" 
+                                           class="w-24 px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-200">
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <input type="text" x-model="server.name" placeholder="名称" 
+                                           class="w-36 px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-200">
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <input type="text" x-model="server.server_status" placeholder="状态" 
+                                           class="w-16 px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-200">
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <input type="text" x-model="server.available" placeholder="可用" 
+                                           class="w-16 px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-200">
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <input type="text" x-model="server.mergeid" placeholder="合并ID" 
+                                           class="w-16 px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-200">
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <input type="text" x-model="server.online" placeholder="在线时间" 
+                                           class="w-28 px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-200">
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <input type="text" x-model="server.server_port" placeholder="端口" 
+                                           class="w-20 px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-200">
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <input type="text" x-model="server.server_ip" placeholder="IP" 
+                                           class="w-42 px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-200">
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <button @click="removeServer(index)" 
+                                            class="inline-flex items-center p-1.5 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-red-400 transition-colors duration-200"
+                                            title="删除">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex space-x-4">
+                    <button @click="addServer" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        添加服务器
+                    </button>
+                    <button @click="saveServerList" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-green-400 transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        保存更改
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最后登录服务器 -->
+    <div x-show="currentTab === 'lastServer'" x-cloak>
+        <div class="bg-white shadow rounded-lg">
+            <!-- 默认服务器 -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-900">默认服务器</h2>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50">ID</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50">名称</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50">状态</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50">端口</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50">IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="px-3 py-2">
+                                    <input type="text" x-model="lastServer.lastserver.default_server.server_id" 
+                                           placeholder="ID" class="w-24 px-3 py-2 text-sm border border-gray-300 rounded-md">
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="text" x-model="lastServer.lastserver.default_server.name" 
+                                           placeholder="名称" class="w-36 px-3 py-2 text-sm border border-gray-300 rounded-md">
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="text" x-model="lastServer.lastserver.default_server.server_status" 
+                                           placeholder="状态" class="w-16 px-3 py-2 text-sm border border-gray-300 rounded-md">
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="text" x-model="lastServer.lastserver.default_server.server_port" 
+                                           placeholder="端口" class="w-20 px-3 py-2 text-sm border border-gray-300 rounded-md">
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="text" x-model="lastServer.lastserver.default_server.server_ip" 
+                                           placeholder="IP" class="w-42 px-3 py-2 text-sm border border-gray-300 rounded-md">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 服务器列表 -->
+            <div class="px-6 py-4 border-t border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-900">服务器列表</h2>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50">ID</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50">名称</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50">状态</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50">端口</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50">IP</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <template x-for="(server, index) in lastServer.lastserver.last_server" :key="index">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-3 py-2">
+                                        <input type="text" x-model="server.server_id" 
+                                               placeholder="ID" class="w-24 px-3 py-2 text-sm border border-gray-300 rounded-md">
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="text" x-model="server.name" 
+                                               placeholder="名称" class="w-36 px-3 py-2 text-sm border border-gray-300 rounded-md">
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="text" x-model="server.server_status" 
+                                               placeholder="状态" class="w-16 px-3 py-2 text-sm border border-gray-300 rounded-md">
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="text" x-model="server.server_port" 
+                                               placeholder="端口" class="w-20 px-3 py-2 text-sm border border-gray-300 rounded-md">
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="text" x-model="server.server_ip" 
+                                               placeholder="IP" class="w-42 px-3 py-2 text-sm border border-gray-300 rounded-md">
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <button @click="removeLastServerItem(index)" 
+                                                class="text-red-600 hover:text-red-700 p-1.5">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 参数设置 -->
+                <div class="mt-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">参数</label>
+                        <input type="text" x-model="lastServer.params" 
+                               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">SDK参数</label>
+                        <input type="text" x-model="lastServer.sdkParams" 
+                               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md">
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="mt-6 flex space-x-4">
+                    <button @click="addLastServerItem" 
+                            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        添加服务器
+                    </button>
+                    <button @click="saveLastServer" 
+                            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        保存更改
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 服务器信息 -->
+    <div x-show="currentTab === 'serverInfo'" x-cloak>
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-white">服务器信息</h2>
+                    <button @click="addField"
+                            class="px-3 py-1 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200">
+                        添加字段
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <template x-for="(field, index) in [...serverInfo.fields].reverse()" :key="index">
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">字段名</label>
+                                <input type="text" x-model="serverInfo.fields[serverInfo.fields.length - 1 - index].key"
+                                       class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">字段值</label>
+                                <input type="text" x-model="serverInfo.fields[serverInfo.fields.length - 1 - index].value"
+                                       class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                            </div>
+                            <div class="w-32">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">类型</label>
+                                <select x-model="serverInfo.fields[serverInfo.fields.length - 1 - index].type"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                                    <option value="string">字符串</option>
+                                    <option value="number">数字</option>
+                                    <option value="boolean">布尔值</option>
+                                </select>
+                            </div>
+                            <div class="pt-6">
+                                <button @click="removeField(serverInfo.fields.length - 1 - index)"
+                                        class="p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 rounded-md transition-colors duration-200">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- 保存按钮 -->
+                <div class="mt-6 flex justify-end">
+                    <button @click="saveServerInfo"
+                            class="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200">
+                        保存更改
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 公告列表 -->
+    <div x-show="currentTab === 'noticeList'" x-cloak>
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-900">公告列表</h2>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50 w-1/3">标题</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50 w-2/3">内容</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 bg-gray-50 w-16">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <template x-for="(notice, index) in noticeList" :key="index">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-3 py-2">
+                                        <input type="text" x-model="notice.title" placeholder="标题" 
+                                               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md">
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <textarea x-model="notice.content" placeholder="内容" 
+                                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md resize-none h-20"></textarea>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <button @click="removeNotice(index)" 
+                                                class="text-red-600 hover:text-red-700 p-1.5">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="mt-6 flex space-x-4">
+                    <button @click="addNotice" 
+                            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        添加公告
+                    </button>
+                    <button @click="saveNoticeList" 
+                            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        保存更改
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 公告数量 -->
+    <div x-show="currentTab === 'noticeNum'" x-cloak>
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-900">公告数量</h2>
+            </div>
+            <div class="p-6">
+                <div class="max-w-xl space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">公告数量</label>
+                            <input type="number" x-model.number="noticeNum.noticenum" 
+                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">弹出设置</label>
+                            <input type="number" x-model.number="noticeNum.eject" 
+                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md">
+                        </div>
+                    </div>
+
+                    <!-- 保存按钮 -->
+                    <div class="flex justify-end pt-4">
+                        <button @click="saveNoticeNum" 
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            保存更改
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 部分保持不变 -->
+</div> 

@@ -1,0 +1,94 @@
+<div x-data="fundManagement()" class="space-y-6">
+    <!-- 市场指数 -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
+        <div class="flex flex-wrap justify-between">
+            <template x-for="index in marketIndices" :key="index.code">
+                <div class="flex items-center space-x-2 p-2 rounded-lg">
+                    <div class="font-medium" x-text="index.name"></div>
+                    <div class="text-xl font-bold" :class="index.growth >= 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'" x-text="index.current.toFixed(2)"></div>
+                    <div :class="index.growth >= 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'" x-text="formatChange(index.change)"></div>
+                    <div :class="index.growth >= 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'" x-text="formatGrowth(index.growth)"></div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- 基金列表 -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">热门基金</h3>
+            <div class="flex items-center space-x-2">
+                <div x-show="isSyncing" class="flex items-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">同步中...</span>
+                </div>
+                <button @click="syncData" :disabled="isSyncing" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                    同步数据
+                </button>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-800">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">基金代码</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">基金名称</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">基金类型</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">最新净值</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">日增长率</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">周增长率</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">月增长率</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">年增长率</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">更新时间</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                    <template x-for="fund in funds" :key="fund.code">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="fund.code"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="fund.name"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="fund.type"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="fund.net_value"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm" :class="getGrowthClass(fund.day_growth)" x-text="formatGrowth(fund.day_growth)"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm" :class="getGrowthClass(fund.week_growth)" x-text="formatGrowth(fund.week_growth)"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm" :class="getGrowthClass(fund.month_growth)" x-text="formatGrowth(fund.month_growth)"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm" :class="getGrowthClass(fund.year_growth)" x-text="formatGrowth(fund.year_growth)"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="formatDate(fund.updated_at)"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+        <!-- 分页控件 -->
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <label class="text-sm text-gray-700 dark:text-gray-300">每页显示：</label>
+                <select x-model="pageSize" @change="changePage(1)" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 text-sm">
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span class="text-sm text-gray-700 dark:text-gray-300">总记录数：<span x-text="total"></span></span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button @click="changePage(1)" :disabled="currentPage === 1" :class="{'opacity-50 cursor-not-allowed': currentPage === 1}" class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+                    首页
+                </button>
+                <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1" :class="{'opacity-50 cursor-not-allowed': currentPage === 1}" class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+                    上一页
+                </button>
+                <span class="text-sm text-gray-700 dark:text-gray-300">第 <span x-text="currentPage"></span> / <span x-text="totalPages"></span> 页</span>
+                <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages" :class="{'opacity-50 cursor-not-allowed': currentPage === totalPages}" class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+                    下一页
+                </button>
+                <button @click="changePage(totalPages)" :disabled="currentPage === totalPages" :class="{'opacity-50 cursor-not-allowed': currentPage === totalPages}" class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+                    末页
+                </button>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -1,0 +1,198 @@
+<div x-data="gameconfManagement">
+    <!-- 项目列表 -->
+    <div class="mb-4" x-show="!showProjectForm && !showTableForm && !showExportForm">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">游戏配置项目</h2>
+            <button @click="showProjectForm = true" class="btn btn-primary">
+                <i class="fas fa-plus"></i> 新建项目
+            </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <template x-for="project in projects" :key="project.id">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-lg font-semibold" x-text="project.name"></h3>
+                        <div class="flex space-x-2">
+                            <button @click="editProject(project)" class="text-blue-500 hover:text-blue-700">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button @click="deleteProject(project)" class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-2" x-text="project.description"></p>
+                    <div class="text-sm text-gray-500">
+                        <div><i class="fas fa-folder"></i> 源文件：<span x-text="project.source_path"></span></div>
+                        <div><i class="fas fa-file-export"></i> 导出：<span x-text="project.data_path"></span></div>
+                        <div><i class="fas fa-code"></i> 代码：<span x-text="project.code_path"></span></div>
+                    </div>
+                    <div class="mt-4">
+                        <button @click="viewTables(project)" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-table"></i> 配置表
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- 配置表列表 -->
+    <div class="mb-4" x-show="currentProject && !showProjectForm && !showTableForm && !showExportForm">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center space-x-4">
+                <button @click="currentProject = null" class="text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-arrow-left"></i> 返回
+                </button>
+                <h2 class="text-xl font-bold" x-text="'配置表 - ' + currentProject.name"></h2>
+            </div>
+            <button @click="showTableForm = true" class="btn btn-primary">
+                <i class="fas fa-plus"></i> 新建配置表
+            </button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="table-auto w-full">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2">名称</th>
+                        <th class="px-4 py-2">描述</th>
+                        <th class="px-4 py-2">文件类型</th>
+                        <th class="px-4 py-2">文件路径</th>
+                        <th class="px-4 py-2">状态</th>
+                        <th class="px-4 py-2">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="table in tables" :key="table.id">
+                        <tr>
+                            <td class="border px-4 py-2" x-text="table.name"></td>
+                            <td class="border px-4 py-2" x-text="table.description"></td>
+                            <td class="border px-4 py-2" x-text="table.file_type"></td>
+                            <td class="border px-4 py-2" x-text="table.file_path"></td>
+                            <td class="border px-4 py-2" x-text="table.status"></td>
+                            <td class="border px-4 py-2">
+                                <div class="flex space-x-2">
+                                    <button @click="editTable(table)" class="text-blue-500 hover:text-blue-700">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button @click="validateTable(table)" class="text-green-500 hover:text-green-700">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button @click="showExportForm = true; currentTable = table" class="text-purple-500 hover:text-purple-700">
+                                        <i class="fas fa-file-export"></i>
+                                    </button>
+                                    <button @click="deleteTable(table)" class="text-red-500 hover:text-red-700">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 项目表单 -->
+    <div x-show="showProjectForm" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+            <h3 class="text-lg font-bold mb-4" x-text="editingProject ? '编辑项目' : '新建项目'"></h3>
+            <form @submit.prevent="saveProject">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">项目名称</label>
+                    <input type="text" x-model="projectForm.name" class="form-input w-full" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">项目描述</label>
+                    <textarea x-model="projectForm.description" class="form-textarea w-full" rows="3"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">源文件目录</label>
+                    <input type="text" x-model="projectForm.source_path" class="form-input w-full" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">导出数据目录</label>
+                    <input type="text" x-model="projectForm.data_path" class="form-input w-full" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">生成代码目录</label>
+                    <input type="text" x-model="projectForm.code_path" class="form-input w-full" required>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" @click="showProjectForm = false" class="btn btn-secondary">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 配置表表单 -->
+    <div x-show="showTableForm" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+            <h3 class="text-lg font-bold mb-4" x-text="editingTable ? '编辑配置表' : '新建配置表'"></h3>
+            <form @submit.prevent="saveTable">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">配置表名称</label>
+                    <input type="text" x-model="tableForm.name" class="form-input w-full" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">配置表描述</label>
+                    <textarea x-model="tableForm.description" class="form-textarea w-full" rows="3"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">文件类型</label>
+                    <select x-model="tableForm.file_type" class="form-select w-full" required>
+                        <option value="excel">Excel</option>
+                        <option value="csv">CSV</option>
+                        <option value="xlsx">XLSX</option>
+                        <option value="xls">XLS</option>
+                        <option value="xlsm">XLSM</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">文件路径</label>
+                    <input type="text" x-model="tableForm.file_path" class="form-input w-full" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">工作表名称</label>
+                    <input type="text" x-model="tableForm.sheet_name" class="form-input w-full" placeholder="Excel文件的工作表名称，可选">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" @click="showTableForm = false" class="btn btn-secondary">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 导出表单 -->
+    <div x-show="showExportForm" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+            <h3 class="text-lg font-bold mb-4">导出配置</h3>
+            <form @submit.prevent="createExport">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">导出格式</label>
+                    <select x-model="exportForm.format" class="form-select w-full" required>
+                        <option value="json">JSON</option>
+                        <option value="xml">XML</option>
+                        <option value="yaml">YAML</option>
+                        <option value="lua">Lua</option>
+                        <option value="binary">Binary</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">目标语言</label>
+                    <select x-model="exportForm.language" class="form-select w-full" required>
+                        <option value="cs">C#</option>
+                        <option value="java">Java</option>
+                        <option value="go">Go</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" @click="showExportForm = false" class="btn btn-secondary">取消</button>
+                    <button type="submit" class="btn btn-primary">导出</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

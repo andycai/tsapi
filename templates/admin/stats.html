@@ -1,0 +1,350 @@
+<!-- 统计管理页面 -->
+<div x-data="statsManagement()" class="space-y-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">游戏统计</h2>
+        <div class="flex space-x-4">
+            <button @click="refreshData()" 
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200">
+                刷新数据
+            </button>
+            <button @click="clearOldData()" 
+                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 transition-colors duration-200">
+                清理旧数据
+            </button>
+        </div>
+    </div>
+
+    <!-- 搜索和筛选区域 -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">日期范围</label>
+                <div class="flex space-x-2">
+                    <input type="date" x-model="filters.startDate" 
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <input type="date" x-model="filters.endDate" 
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">搜索</label>
+                <input type="text" x-model="filters.search" placeholder="搜索登录ID或角色名..." 
+                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">内存阈值</label>
+                <select x-model="filters.memoryThreshold" 
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <option value="">全部</option>
+                    <option value="1024">大于1GB</option>
+                    <option value="2048">大于2GB</option>
+                    <option value="4096">大于4GB</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">登录ID</th>
+                        <th scope="col" class="px-6 py-3">应用ID</th>
+                        <th scope="col" class="px-6 py-3">包名</th>
+                        <th scope="col" class="px-6 py-3">角色名</th>
+                        <th scope="col" class="px-6 py-3">设备</th>
+                        <th scope="col" class="px-6 py-3">CPU</th>
+                        <th scope="col" class="px-6 py-3">GPU</th>
+                        <th scope="col" class="px-6 py-3">内存</th>
+                        <th scope="col" class="px-6 py-3">显存</th>
+                        <th scope="col" class="px-6 py-3">时间</th>
+                        <th scope="col" class="px-6 py-3">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="stat in stats" :key="stat.id">
+                        <tr @click="viewDetails(stat)" class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer">
+                            <td class="px-6 py-4 whitespace-nowrap" x-text="stat.login_id"></td>
+                            <td class="px-6 py-4 whitespace-nowrap" x-text="stat.app_id"></td>
+                            <td class="px-6 py-4 whitespace-nowrap" x-text="stat.package_name"></td>
+                            <td class="px-6 py-4 whitespace-nowrap" x-text="stat.role_name"></td>
+                            <td class="px-6 py-4 whitespace-nowrap" x-text="stat.device_name"></td>
+                            <td class="px-6 py-4 whitespace-nowrap" x-text="stat.system_cpu"></td>
+                            <td class="px-6 py-4 whitespace-nowrap" x-text="stat.graphics_divice"></td>
+                            <td class="px-6 py-4 whitespace-nowrap" x-text="formatMemory(stat.system_mem)"></td>
+                            <td class="px-6 py-4 whitespace-nowrap" x-text="formatMemory(stat.graphics_mem)"></td>
+                            <td class="px-6 py-4 whitespace-nowrap" x-text="formatDateTime(stat.mtime)"></td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <button @click.stop="deleteStat(stat.id)" 
+                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页 -->
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    显示 <span x-text="(currentPage - 1) * pageSize + 1"></span> 到 
+                    <span x-text="Math.min(currentPage * pageSize, total)"></span> 条，
+                    共 <span x-text="total"></span> 条
+                </div>
+                <div class="flex space-x-2">
+                    <button @click="previousPage" 
+                            :disabled="currentPage === 1"
+                            class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50">
+                        上一页
+                    </button>
+                    <button @click="nextPage" 
+                            :disabled="currentPage * pageSize >= total"
+                            class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50">
+                        下一页
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div x-show="showModal" 
+         class="fixed inset-0 z-40 overflow-y-auto" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;">
+        <div class="flex items-center justify-center min-h-screen text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75 dark:bg-gray-900"></div>
+            </div>
+
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-1 sm:align-middle sm:max-w-8xl sm:w-full"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">统计详情</h3>
+                    <div class="flex items-center space-x-4">
+                        <!-- 导航按钮 -->
+                        <button @click="previousStat()" 
+                                :disabled="!hasPreviousStat()"
+                                :class="{'opacity-50 cursor-not-allowed': !hasPreviousStat()}"
+                                class="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none">
+                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                            上一条
+                        </button>
+                        <button @click="nextStat()" 
+                                :disabled="!hasNextStat()"
+                                :class="{'opacity-50 cursor-not-allowed': !hasNextStat()}"
+                                class="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none">
+                            下一条
+                            <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm dark:bg-blue-500 dark:hover:bg-blue-600"
+                            @click="closeModal">
+                            关闭
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <template x-if="currentStat">
+                        <div class="flex flex-wrap">
+                            <!-- 左侧详细信息和图表 -->
+                            <div class="w-full lg:w-3/4 pr-4 border-r-2">
+                                <!-- 基本信息 -->
+                                <div class="mb-4 flex flex-wrap">
+                                    <div class="w-4/5 grid grid-cols-3 gap-2">
+                                        <p>Login ID: <span x-text="currentStat.login_id"></span></p>
+                                        <p>App ID: <span x-text="currentStat.app_id"></span></p>
+                                        <p>包名: <span x-text="currentStat.package_name"></span></p>
+                                        <p>角色名: <span x-text="currentStat.role_name"></span></p>
+                                        <p>产品名称: <span x-text="currentStat.product_name"></span></p>
+                                        <p>设备名: <span x-text="currentStat.device_name"></span></p>
+                                        <p>CPU: <span x-text="currentStat.system_cpu"></span></p>
+                                        <p>系统内存: <span x-text="formatMemory(currentStat.system_mem)"></span></p>
+                                        <p>GPU: <span x-text="currentStat.graphics_divice"></span></p>
+                                        <p>GPU内存: <span x-text="formatMemory(currentStat.graphics_mem)"></span></p>
+                                        <p>统计时间: <span x-text="formatDateTime(currentStat.mtime)"></span></p>
+                                        <p>创建时间: <span x-text="formatDateTime(currentStat.created_at)"></span></p>
+                                    </div>
+                                    <div id="screenshot" class="w-1/5"></div>
+                                </div>
+
+                                <!-- 图表区域 -->
+                                <div class="grid grid-cols-1 gap-4">
+                                    <!-- FPS图表 -->
+                                    <div class="h-[35vh] relative">
+                                        <div class="absolute top-2 right-2 z-10 flex space-x-2">
+                                            <button @click="navigateChartPoint('previousPoint', 'detailFpsChart')"
+                                                class="px-2 py-1 bg-blue-500 text-white rounded text-sm">
+                                                <svg class="h-4 w-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                                </svg>
+                                            </button>
+                                            <button @click="navigateChartPoint('nextPoint', 'detailFpsChart')"
+                                                class="px-2 py-1 bg-blue-500 text-white rounded text-sm">
+                                                <svg class="h-4 w-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                                </svg>
+                                            </button>
+                                            <button @click="resetZoom('detailFpsChart')" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">
+                                                <svg class="h-4 w-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <canvas id="detailFpsChart"></canvas>
+                                    </div>
+
+                                    <!-- 内存图表 -->
+                                    <div class="h-[35vh] relative">
+                                        <div class="absolute top-2 right-2 z-10 flex space-x-2">
+                                            <button @click="resetZoom('detailMemoryChart')" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">
+                                                <svg class="h-4 w-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <canvas id="detailMemoryChart"></canvas>
+                                    </div>
+
+                                    <!-- Shader图表 -->
+                                    <div class="h-[35vh] relative">
+                                        <div class="absolute top-2 right-2 z-10 flex space-x-2">
+                                            <button @click="resetZoom('detailShaderChart')" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">
+                                                <svg class="h-4 w-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <canvas id="detailShaderChart"></canvas>
+                                    </div>
+
+                                    <!-- Texture图表 -->
+                                    <div class="h-[35vh] relative">
+                                        <div class="absolute top-2 right-2 z-10 flex space-x-2">
+                                            <button @click="resetZoom('detailTextureChart')" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">
+                                                <svg class="h-4 w-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <canvas id="detailTextureChart"></canvas>
+                                    </div>
+
+                                    <!-- Mesh图表 -->
+                                    <div class="h-[35vh] relative">
+                                        <div class="absolute top-2 right-2 z-10 flex space-x-2">
+                                            <button @click="resetZoom('detailMeshChart')" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">
+                                                <svg class="h-4 w-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <canvas id="detailMeshChart"></canvas>
+                                    </div>
+
+                                    <!-- Animation图表 -->
+                                    <div class="h-[35vh] relative">
+                                        <div class="absolute top-2 right-2 z-10 flex space-x-2">
+                                            <button @click="resetZoom('detailAnimationChart')" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">
+                                                <svg class="h-4 w-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <canvas id="detailAnimationChart"></canvas>
+                                    </div>
+
+                                    <!-- Audio图表 -->
+                                    <div class="h-[35vh] relative">
+                                        <div class="absolute top-2 right-2 z-10 flex space-x-2">
+                                            <button @click="resetZoom('detailAudioChart')" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">
+                                                <svg class="h-4 w-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <canvas id="detailAudioChart"></canvas>
+                                    </div>
+
+                                    <!-- Font图表 -->
+                                    <div class="h-[35vh] relative">
+                                        <div class="absolute top-2 right-2 z-10 flex space-x-2">
+                                            <button @click="resetZoom('detailFontChart')" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">
+                                                <svg class="h-4 w-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <canvas id="detailFontChart"></canvas>
+                                    </div>
+
+                                    <!-- Text Asset图表 -->
+                                    <div class="h-[35vh] relative">
+                                        <div class="absolute top-2 right-2 z-10 flex space-x-2">
+                                            <button @click="resetZoom('detailTextAssetChart')" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">
+                                                <svg class="h-4 w-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <canvas id="detailTextAssetChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 右侧Process Info -->
+                            <div class="w-full lg:w-1/4 mt-4 lg:mt-0 px-2">
+                                <h3 class="text-lg font-bold mb-2 text-gray-900 dark:text-white">逻辑执行和资源加载统计</h3>
+                                <pre id="processInfo" class="whitespace-pre-wrap break-words text-sm bg-gray-100 dark:bg-gray-800 dark:text-gray-300 p-2 rounded transition-colors duration-200"></pre>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 放大图片容器 -->
+    <div id="enlargedImageContainer" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden"
+         @click="hideEnlarged">
+        <img id="enlargedImage" src="" alt="Enlarged Screenshot" class="max-w-[90vw] max-h-[90vh] object-contain">
+    </div>
+</div>

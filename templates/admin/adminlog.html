@@ -1,0 +1,128 @@
+<!-- Admin logs content -->
+<div x-data="adminLogManagement()" class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">操作日志</h2>
+        <button @click="clearLogs()" 
+                class="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+            清理日志
+        </button>
+    </div>
+
+    <!-- 搜索表单 -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <form @submit.prevent="search" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">用户名</label>
+                <input type="text" x-model="searchForm.username" 
+                       class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">操作类型</label>
+                <select x-model="searchForm.action" 
+                        class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+                    <option value="">全部</option>
+                    <option value="create">创建</option>
+                    <option value="update">更新</option>
+                    <option value="delete">删除</option>
+                    <option value="run">运行</option>
+                    <option value="view">查看</option>
+                    <option value="ftp">FTP上传</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">资源类型</label>
+                <select x-model="searchForm.resource" 
+                        class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+                    <option value="">全部</option>
+                    <option value="user">用户</option>
+                    <option value="role">角色</option>
+                    <option value="permission">权限</option>
+                    <option value="menu">菜单</option>
+                    <option value="gamelog">游戏日志</option>
+                    <option value="stats">数据统计</option>
+                    <option value="file">目录浏览</option>
+                    <option value="serverconf">服务器配置</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">开始日期</label>
+                <input type="date" x-model="searchForm.startDate" 
+                       class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">结束日期</label>
+                <input type="date" x-model="searchForm.endDate" 
+                       class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+            </div>
+            <div class="flex items-end">
+                <button type="submit" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                    搜索
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 日志列表 -->
+    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">用户名</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作类型</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">资源类型</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">资源ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作详情</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">IP地址</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作时间</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                <template x-for="log in logs" :key="log.id">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100" x-text="log.id"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100" x-text="log.username"></td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full"
+                                  :class="{
+                                      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': log.action === 'create',
+                                      'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': log.action === 'update',
+                                      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': log.action === 'delete',
+                                      'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': log.action !== '',
+                                  }"
+                                  x-text="getActionText(log.action)">
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100" x-text="getResourceText(log.resource)"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100" x-text="log.resource_id"></td>
+                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100" x-text="log.details"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100" x-text="log.ip"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100" x-text="formatDate(log.created_at)"></td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分页 -->
+    <div class="flex justify-between items-center">
+        <div class="text-sm text-gray-700 dark:text-gray-300">
+            共 <span x-text="total"></span> 条记录
+        </div>
+        <div class="flex space-x-2">
+            <button @click="previousPage()" 
+                    :disabled="currentPage === 1"
+                    :class="{'opacity-50 cursor-not-allowed': currentPage === 1}"
+                    class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200">
+                上一页
+            </button>
+            <button @click="nextPage()" 
+                    :disabled="currentPage * pageSize >= total"
+                    :class="{'opacity-50 cursor-not-allowed': currentPage * pageSize >= total}"
+                    class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200">
+                下一页
+            </button>
+        </div>
+    </div>
+</div>
