@@ -77,7 +77,7 @@ export const view = new Elysia()
       })
     }
   })
-  .get('/logout', ({ cookie: { jwt }, set }) => {
+  .get('/logout', ({ set, cookie: { jwt } }) => {
     jwt.remove()
     
     // 使用重定向工具函数
