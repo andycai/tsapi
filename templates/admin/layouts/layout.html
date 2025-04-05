@@ -11,7 +11,7 @@
     <!-- 页面特定的头部内容 -->
     {{if .Head}}
         {{.Head}}
-    {{end}}
+    {{/if}}
 </head>
 <body class="h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased" 
       x-data="adminLayout()" 
@@ -433,7 +433,7 @@
 
             <!-- 页面内容 -->
             <main class="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900 relative">
-                {{ embed }}
+                {{ .Layout }}
             </main>
         </div>
     </div>
@@ -711,10 +711,10 @@
                 init() {
                     // 检查登录状态
                     const token = localStorage.getItem('token');
-                    if (!token) {
-                        window.location.href = '/login';
-                        return;
-                    }
+                    // if (!token) {
+                    //     window.location.href = '/login';
+                    //     return;
+                    // }
 
                     // 设置初始主题
                     if (this.theme === 'dark') {
@@ -808,9 +808,9 @@
     
     <!-- 页面特定的脚本 -->
     {{if .Scripts}}
-        {{range .Scripts}}
-            <script src="{{.}}"></script>
-        {{end}}
-    {{end}}
+        {{each .Scripts in .Script}}
+            <script src="{{ .Script }}"></script>
+        {{/each}}
+    {{/if}}
 </body>
 </html>

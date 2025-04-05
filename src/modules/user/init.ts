@@ -1,4 +1,91 @@
 import { Elysia, t } from 'elysia'
+import { UserHandler } from './handler'
+import { authService } from '../auth/init'
+
+// 创建处理器实例
+const userHandler = new UserHandler()
+
+// 用户模块路由
+export const users = new Elysia({ prefix: '/api/users' })
+  .use(authService)
+  .get(
+    '/',
+    () => userHandler.getAllUsers(),
+    {
+      detail: {
+        tags: ['用户管理'],
+        summary: '获取所有用户',
+      },
+      // 需要管理员身份才能访问
+      beforeHandle: ({ auth }: any) => auth(true)
+    }
+  )
+  .get(
+    '/:id',
+    ({ params, error }) => userHandler.getUserById({ params, error } as any),
+    {
+      detail: {
+        tags: ['用户管理'],
+        summary: '根据ID获取用户',
+      },
+      params: t.Object({
+        id: t.String()
+      }),
+      beforeHandle: ({ auth }: any) => auth(true)
+    }
+  )
+  .post(
+    '/',
+    ({ body, error }) => userHandler.createUser({ body, error } as any),
+    {
+      detail: {
+        tags: ['用户管理'],
+        summary: '创建新用户',
+      },
+      body: t.Object({
+        username: t.String({ minLength: 3 }),
+        password: t.String({ minLength: 6 }),
+        nickname: t.Optional(t.String()),
+        roleId: t.Optional(t.Number()),
+        status: t.Optional(t.Number())
+      }),
+      beforeHandle: ({ auth }: any) => auth(true)
+    }
+  )
+  .put(
+    '/:id',
+    ({ params, body, error }) => userHandler.updateUser({ params, body, error } as any),
+    {
+      detail: {
+        tags: ['用户管理'],
+        summary: '更新用户',
+      },
+      params: t.Object({
+        id: t.String()
+      }),
+      body: t.Object({
+        nickname: t.Optional(t.String()),
+        password: t.Optional(t.String({ minLength: 6 })),
+        roleId: t.Optional(t.Number()),
+        status: t.Optional(t.Number())
+      }),
+      beforeHandle: ({ auth }: any) => auth(true)
+    }
+  )
+  .delete(
+    '/:id',
+    ({ params, error }) => userHandler.deleteUser({ params, error } as any),
+    {
+      detail: {
+        tags: ['用户管理'],
+        summary: '删除用户',
+      },
+      params: t.Object({
+        id: t.String()
+      }),
+      beforeHandle: ({ auth }: any) => auth(true)
+    }
+  )
 
 export const userService = new Elysia({ name: 'user/service' })
     .state({

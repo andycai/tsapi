@@ -28,6 +28,11 @@ export const viewService = new Elysia({ name: 'view/service' })
 export const view = new Elysia()
   .use(viewService)
   .use(authService)
+  .get('/admin', () => {
+    return template('admin/index', {
+      Title: '首页',
+    }, 'admin/layouts/layout')
+  })
   .get('/', () => {
     return template('home', {
       Title: '首页',

@@ -19,6 +19,46 @@ model User {
   username  String   @unique
   password  String
   email     String?  @unique
+  nickname  String?
+  status    Int      @default(1) // 1: 正常, 0: 禁用
+  role      Role?    @relation(fields: [roleId], references: [id])
+  roleId    Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// 角色模型
+model Role {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique
+  description String?
+  users       User[]
+  permissions Permission[]  @relation("RolePermissions")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+// 权限模型
+model Permission {
+  id          Int      @id @default(autoincrement())
+  name        String   
+  code        String   @unique // 权限唯一标识，如 'user:create'
+  description String?
+  roles       Role[]   @relation("RolePermissions")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 菜单模型
+model Menu {
+  id         Int      @id @default(autoincrement())
+  parentId   Int      @default(0) // 父菜单ID，0表示顶级菜单
+  name       String
+  path       String?  // 路由路径
+  icon       String?  // 图标
+  permission String?  // 关联的权限code
+  sort       Int      @default(0) // 排序
+  isShow     Boolean  @default(true) // 是否显示
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

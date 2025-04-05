@@ -6,6 +6,9 @@ import { user } from './modules/user/init'
 import { note } from './modules/note/init'
 import { auth } from './modules/auth/init'
 import { view } from './modules/view/init'
+import { permissions } from './modules/permission/init'
+import { roles } from './modules/role/init'
+import { menus } from './modules/menu/init'
 import { configLoader } from './lib/config'
 
 // 获取服务器配置
@@ -53,6 +56,9 @@ const app = new Elysia()
   .use(note)
   .use(auth)
   .use(view)
+  .use(permissions)
+  .use(roles)
+  .use(menus)
   .listen({
     port: serverConfig.port,
     hostname: serverConfig.host
