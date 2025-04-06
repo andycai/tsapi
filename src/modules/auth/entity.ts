@@ -31,7 +31,7 @@ export interface UserResponseDto {
 
 // API响应格式
 export interface ApiResponse<T = any> {
-  success: boolean
+  code: number // 0表示成功，非0表示错误
   message: string
   data?: T
 }

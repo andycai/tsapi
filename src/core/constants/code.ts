@@ -1,0 +1,53 @@
+/**
+ * API响应码枚举
+ * 
+ * 0: 成功
+ * 1xxx: 认证相关错误
+ * 2xxx: 用户相关错误
+ * 3xxx: 权限相关错误
+ * 4xxx: 数据相关错误
+ * 5xxx: 系统错误
+ */
+export enum ApiCode {
+  // 成功
+  SUCCESS = 0,
+  
+  // 通用HTTP错误 (对应HTTP状态码)
+  BAD_REQUEST = 400,
+  UNAUTHORIZED = 401,
+  FORBIDDEN = 403,
+  NOT_FOUND = 404,
+  METHOD_NOT_ALLOWED = 405,
+  SERVER_ERROR = 500,
+  
+  // 认证错误 (1xxx)
+  AUTH_USERNAME_PASSWORD_ERROR = 1001,
+  AUTH_USERNAME_EXISTS = 1002,
+  AUTH_EMAIL_EXISTS = 1003,
+  AUTH_TOKEN_INVALID = 1004,
+  AUTH_TOKEN_EXPIRED = 1005,
+  AUTH_ACCOUNT_DISABLED = 1006,
+  
+  // 用户相关错误 (2xxx)
+  USER_NOT_FOUND = 2001,
+  USER_INVALID_INPUT = 2002,
+  USER_UPDATE_FAILED = 2003,
+  USER_DELETE_FAILED = 2004,
+  
+  // 权限相关错误 (3xxx)
+  PERMISSION_DENIED = 3001,
+  ROLE_NOT_FOUND = 3002,
+  PERMISSION_NOT_FOUND = 3003,
+  
+  // 数据相关错误 (4xxx)
+  DATA_NOT_FOUND = 4001,
+  DATA_ALREADY_EXISTS = 4002,
+  DATA_VALIDATION_FAILED = 4003,
+  DATA_OPERATION_FAILED = 4004,
+  
+  // 系统错误 (5xxx)
+  SYSTEM_ERROR = 5001,
+  DATABASE_ERROR = 5002,
+  NETWORK_ERROR = 5003,
+  UNKNOWN_ERROR = 5999
+} 

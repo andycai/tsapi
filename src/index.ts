@@ -11,6 +11,7 @@ import { roles } from './modules/role/init'
 import { menus, publicMenus } from './modules/menu/init'
 import { configLoader } from './lib/config'
 import { template } from './lib/template'
+import { ApiCode } from './core/constants/code'
 
 // 获取服务器配置
 const serverConfig = configLoader.getServerConfig()
@@ -21,7 +22,7 @@ const apiApp = new Elysia({ prefix: '/api' })
     // API路由返回JSON错误响应
     if (code === 'NOT_FOUND') {
       set.status = 404
-      return { success: false, message: 'API endpoint not found' }
+      return { code: ApiCode.NOT_FOUND, message: 'API endpoint not found' }
     }
     
     if (code === 'VALIDATION') {
@@ -38,26 +39,25 @@ const apiApp = new Elysia({ prefix: '/api' })
       set.status = 400
       
       return { 
-        success: false, 
-        message: 'Validation Error', 
-        details: details,
+        code: ApiCode.DATA_VALIDATION_FAILED, 
+        message: 'Validation Error: ' + details,
         error: process.env.NODE_ENV === 'development' ? error : undefined
       }
     }
 
     if (code === 403) {
       set.status = 403
-      return { success: false, message: 'Forbidden - Insufficient permissions' }
+      return { code: ApiCode.FORBIDDEN, message: 'Forbidden - Insufficient permissions' }
     }
     
     if (code === 401) {
       set.status = 401
-      return { success: false, message: 'Unauthorized - Please login' }
+      return { code: ApiCode.UNAUTHORIZED, message: 'Unauthorized - Please login' }
     }
 
     console.error('API服务器错误:', error)
     set.status = 500
-    return { success: false, message: 'Server Error' }
+    return { code: ApiCode.SERVER_ERROR, message: 'Server Error' }
   })
   .use(user)
   .use(note)
@@ -113,7 +113,7 @@ const app = new Elysia()
       // API风格的错误响应
       if (code === 'NOT_FOUND') {
         set.status = 404
-        return { success: false, message: 'Not Found' }
+        return { code: ApiCode.NOT_FOUND, message: 'Not Found' }
       }
       
       if (code === 'VALIDATION') {
@@ -130,26 +130,25 @@ const app = new Elysia()
         set.status = 400
         
         return { 
-          success: false, 
-          message: 'Validation Error', 
-          details: details,
+          code: ApiCode.DATA_VALIDATION_FAILED, 
+          message: 'Validation Error: ' + details,
           error: process.env.NODE_ENV === 'development' ? error : undefined
         }
       }
 
       if (code === 403) {
         set.status = 403
-        return { success: false, message: 'Forbidden' }
+        return { code: ApiCode.FORBIDDEN, message: 'Forbidden' }
       }
       
       if (code === 401) {
         set.status = 401
-        return { success: false, message: 'Unauthorized' }
+        return { code: ApiCode.UNAUTHORIZED, message: 'Unauthorized' }
       }
 
       console.error('服务器错误:', error)
       set.status = 500
-      return { success: false, message: 'Server Error' }
+      return { code: ApiCode.SERVER_ERROR, message: 'Server Error' }
     } else {
       // HTML页面错误响应
       set.headers['Content-Type'] = 'text/html; charset=utf-8'

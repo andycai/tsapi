@@ -2,6 +2,7 @@ import { randomBytes } from 'crypto'
 import { AuthUtils } from './utils'
 import { AuthDao } from './dao'
 import { RegisterDto, LoginDto, UserResponseDto, ApiResponse, AuthResponseDto } from './entity'
+import { ApiCode } from '../../core/constants/code'
 
 export class AuthService {
   private authDao: AuthDao
@@ -29,7 +30,7 @@ export class AuthService {
 
     if (existingUser) {
       return {
-        success: false,
+        code: ApiCode.AUTH_USERNAME_EXISTS,
         message: '用户名或邮箱已被使用'
       }
     }
@@ -48,7 +49,7 @@ export class AuthService {
     })
 
     return {
-      success: true,
+      code: ApiCode.SUCCESS,
       message: '注册成功',
       data: AuthUtils.mapUserToDto(user)
     }
@@ -63,7 +64,7 @@ export class AuthService {
 
     if (!user) {
       return {
-        success: false,
+        code: ApiCode.AUTH_USERNAME_PASSWORD_ERROR,
         message: '用户名或密码错误'
       }
     }
@@ -72,7 +73,7 @@ export class AuthService {
 
     if (!isValidPassword) {
       return {
-        success: false,
+        code: ApiCode.AUTH_USERNAME_PASSWORD_ERROR,
         message: '用户名或密码错误'
       }
     }
@@ -84,7 +85,7 @@ export class AuthService {
     const tokenExpiry = AuthUtils.getTokenExpiry(loginDto.remember)
 
     return {
-      success: true,
+      code: ApiCode.SUCCESS,
       message: '登录成功',
       data: {
         token,
