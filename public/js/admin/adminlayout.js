@@ -269,10 +269,10 @@ function adminLayoutManagement() {
         init() {
             // 检查登录状态
             const token = localStorage.getItem('token');
-            // if (!token) {
-            //     window.location.href = '/login';
-            //     return;
-            // }
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
 
             // 设置初始主题
             if (this.theme === 'dark') {

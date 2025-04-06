@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto'
 import { AuthUtils } from './utils'
 import { AuthDao } from './dao'
-import { RegisterDto, LoginDto, UserResponseDto, ApiResponse } from './entity'
+import { RegisterDto, LoginDto, UserResponseDto, ApiResponse, AuthResponseDto } from './entity'
 
 export class AuthService {
   private authDao: AuthDao
@@ -57,7 +57,7 @@ export class AuthService {
   /**
    * 用户登录
    */
-  async login(loginDto: LoginDto): Promise<ApiResponse<UserResponseDto> & { tokenExpiry?: number }> {
+  async login(loginDto: LoginDto): Promise<ApiResponse<AuthResponseDto>> {
     // 查找用户
     const user = await this.authDao.findUserByUsername(loginDto.username)
 
@@ -77,14 +77,19 @@ export class AuthService {
       }
     }
 
+    // 生成JWT令牌
+    const token = AuthUtils.generateToken(user.id, loginDto.remember)
+
     // 获取令牌过期时间
     const tokenExpiry = AuthUtils.getTokenExpiry(loginDto.remember)
 
     return {
       success: true,
       message: '登录成功',
-      data: AuthUtils.mapUserToDto(user),
-      tokenExpiry
+      data: {
+        token,
+        user: AuthUtils.mapUserToDto(user)
+      }
     }
   }
 }

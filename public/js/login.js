@@ -52,10 +52,23 @@ function loginManagement() {
                     return;
                 }
 
+                const { token, user } = data.data;
+
+                // 根据记住我选项保存或清除用户名
+                if (this.remember) {
+                    localStorage.setItem('saved_username', this.username);
+                } else {
+                    localStorage.removeItem('saved_username');
+                }
+
+                // 保存 token 和用户信息到 localStorage
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(user));
+
                 this.successMessage = '登录成功！正在跳转...';
 
                 setTimeout(() => {
-                    window.location.href = '/profile';
+                    window.location.href = '/admin';
                 }, 1000);
 
             } catch (error) {

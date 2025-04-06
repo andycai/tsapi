@@ -66,10 +66,7 @@ export class AuthHandler {
         'Set-Cookie': cookieValue as any
       } as any
 
-      // 移除 tokenExpiry 字段，不需要返回给客户端
-      const { tokenExpiry, ...responseData } = result
-
-      return responseData
+      return result
     } catch (err) {
       console.error('登录处理错误:', err)
       set.status = 500

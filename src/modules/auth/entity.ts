@@ -19,6 +19,14 @@ export interface UserResponseDto {
   id: number
   username: string
   email: string | null
+  nickname: string | null
+  role_id: number | null
+  role: any | null
+  status: number
+  last_login?: Date | null
+  has_changed_pwd?: boolean
+  created_at?: Date
+  updated_at?: Date
 }
 
 // API响应格式
@@ -26,6 +34,12 @@ export interface ApiResponse<T = any> {
   success: boolean
   message: string
   data?: T
+}
+
+// 认证响应格式
+export interface AuthResponseDto {
+  token: string
+  user: UserResponseDto
 }
 
 // 用户认证状态

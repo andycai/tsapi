@@ -2,6 +2,7 @@ import type { User } from '@prisma/client'
 import { prisma } from '../../lib/prisma'
 import { configLoader } from '../../lib/config'
 import type { UserResponseDto } from './entity'
+import { serialize } from 'cookie'
 
 // 获取认证配置
 const authConfig = configLoader.getAuthConfig()
@@ -28,18 +29,36 @@ export class AuthUtils {
    * @returns Cookie 字符串
    */
   static createAuthCookie(username: string, remember: boolean = false): string {
-    const maxAge = this.getTokenExpiry(remember)
-    return `jwt=${username}; HttpOnly; Path=/; Max-Age=${maxAge}`
+    const maxAge = this.getTokenExpiry(remember) * 1000;
+    
+    return serialize('jwt', username, {
+      httpOnly: true,
+      path: '/',
+      maxAge,
+      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production'
+    })
   }
 
   /**
    * 将用户实体映射为DTO（移除敏感信息）
    */
   static mapUserToDto(user: User): UserResponseDto {
+    // 处理扩展的User类型（包含role关系）
+    const userWithRole = user as any;
+    
     return {
       id: user.id,
       username: user.username,
-      email: user.email
+      email: user.email,
+      nickname: user.nickname,
+      role_id: user.roleId,
+      role: userWithRole.role || null,
+      status: user.status,
+      last_login: null, // 需要在数据库中添加该字段
+      has_changed_pwd: false, // 需要在数据库中添加该字段
+      created_at: user.createdAt,
+      updated_at: user.updatedAt
     }
   }
 
@@ -60,5 +79,23 @@ export class AuthUtils {
       console.error('验证令牌时出错:', error)
       return null
     }
+  }
+
+  /**
+   * 生成JWT令牌
+   * @param userId 用户ID
+   * @param remember 是否记住登录
+   */
+  static generateToken(userId: number, remember: boolean = false): string {
+    const expiry = this.getTokenExpiry(remember);
+    
+    // 简单实现，实际应使用JWT库
+    const payload = {
+      sub: userId,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + expiry
+    }
+    
+    return Buffer.from(JSON.stringify(payload)).toString('base64')
   }
 } 

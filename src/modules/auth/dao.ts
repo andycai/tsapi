@@ -8,7 +8,10 @@ export class AuthDao {
    */
   async findUserByUsername(username: string): Promise<User | null> {
     return prisma.user.findUnique({
-      where: { username }
+      where: { username },
+      include: {
+        role: true
+      }
     })
   }
 
