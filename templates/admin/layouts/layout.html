@@ -5,19 +5,12 @@
     <title>管理后台 - {{ .Title }}</title>
     <script src="/static/js/alpine-3.14.9.js" defer></script>
     <script src="/static/js/admin/adminlayout.js"></script>
-
-    <!-- 页面特定的脚本 -->
-    {{if .Scripts}}
-    {{each .Scripts in .Script}}
+    {{each .Scripts as .Script}}
     <script src="{{ .Script }}"></script>
     {{/each}}
-    {{/if}}
-
     <link rel="stylesheet" href="/static/css/tailwind.min.css">
     <link rel="stylesheet" href="/static/css/admin/main.css">
     <link rel="stylesheet" href="/static/css/admin/layout.css">
-    
-    <!-- 页面特定的头部内容 -->
     {{if .Head}}
         {{.Head}}
     {{/if}}

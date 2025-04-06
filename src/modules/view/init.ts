@@ -32,6 +32,12 @@ export const view = new Elysia()
       Title: '首页',
     }, 'admin/layouts/layout')
   })
+  .get('/admin/users', () => {
+    return template('admin/users', {
+      Title: '用户管理',
+      Scripts: ['/static/js/admin/users.js'],
+    }, 'admin/layouts/layout')
+  })
   .get('/', () => {
     return template('home', {
       Title: '首页',
