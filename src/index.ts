@@ -15,55 +15,175 @@ import { template } from './lib/template'
 // 获取服务器配置
 const serverConfig = configLoader.getServerConfig()
 
-const app = new Elysia()
-  .use(swagger())
-  .use(cookie())
+// 创建API路由组
+const apiApp = new Elysia({ prefix: '/api' })
   .onError(({ error, code, set }) => {
-    // 设置响应内容类型为 HTML
-    set.headers['Content-Type'] = 'text/html; charset=utf-8';
+    // API路由返回JSON错误响应
+    if (code === 'NOT_FOUND') {
+      set.status = 404
+      return { success: false, message: 'API endpoint not found' }
+    }
     
-    if (code === 'NOT_FOUND')
-      return template('errors/404', {})
-    
-    // 处理验证错误
     if (code === 'VALIDATION') {
-      console.error('验证错误详情:', JSON.stringify(error, null, 2));
+      console.error('验证错误详情:', JSON.stringify(error, null, 2))
       
-      // 尝试提取更有用的错误信息
-      let details = 'Invalid data format';
+      let details = 'Invalid data format'
       
       if (error.all) {
-        details = error.all.map((err: any) => `${err.path}: ${err.message}`).join('; ');
+        details = error.all.map((err: any) => `${err.path}: ${err.message}`).join('; ')
       } else if (error.message) {
-        details = error.message;
+        details = error.message
       }
       
-      // 设置合适的状态码
-      set.status = 400;
+      set.status = 400
       
-      return template('errors/400', {})
+      return { 
+        success: false, 
+        message: 'Validation Error', 
+        details: details,
+        error: process.env.NODE_ENV === 'development' ? error : undefined
+      }
     }
 
     if (code === 403) {
-      return template('errors/403', {})
+      set.status = 403
+      return { success: false, message: 'Forbidden - Insufficient permissions' }
     }
     
-    // 处理未授权错误 (401)
     if (code === 401) {
-      return template('errors/401', {})
+      set.status = 401
+      return { success: false, message: 'Unauthorized - Please login' }
     }
 
-    console.error('服务器错误:', error)
-    return template('errors/500', {})
+    console.error('API服务器错误:', error)
+    set.status = 500
+    return { success: false, message: 'Server Error' }
   })
   .use(user)
   .use(note)
   .use(auth)
-  .use(view)
   .use(permissions)
   .use(roles)
   .use(menus)
-  .use(publicMenus)
+
+// 创建Admin路由组
+const adminApp = new Elysia({ prefix: '/admin' })
+  .onError(({ error, code, set }) => {
+    // Admin路由返回HTML错误页面
+    set.headers['Content-Type'] = 'text/html; charset=utf-8'
+    
+    if (code === 'NOT_FOUND') {
+      set.status = 404
+      return template('errors/404', {})
+    }
+    
+    if (code === 'VALIDATION') {
+      console.error('验证错误详情:', JSON.stringify(error, null, 2))
+      
+      set.status = 400
+      return template('errors/400', {})
+    }
+
+    if (code === 403) {
+      set.status = 403
+      return template('errors/403', {})
+    }
+    
+    if (code === 401) {
+      set.status = 401
+      return template('errors/401', {})
+    }
+
+    console.error('Admin服务器错误:', error)
+    set.status = 500
+    return template('errors/500', {})
+  })
+  .use(view)
+
+// 主应用
+const app = new Elysia()
+  .use(swagger())
+  .use(cookie())
+  .onError(({ error, code, set, request }) => {
+    // 默认错误处理 - 对于非API和非Admin路由
+    // 检查路径决定返回HTML还是JSON
+    const isApiRequest = request.url.includes('/api/')
+    
+    if (isApiRequest) {
+      // API风格的错误响应
+      if (code === 'NOT_FOUND') {
+        set.status = 404
+        return { success: false, message: 'Not Found' }
+      }
+      
+      if (code === 'VALIDATION') {
+        console.error('验证错误详情:', JSON.stringify(error, null, 2))
+        
+        let details = 'Invalid data format'
+        
+        if (error.all) {
+          details = error.all.map((err: any) => `${err.path}: ${err.message}`).join('; ')
+        } else if (error.message) {
+          details = error.message
+        }
+        
+        set.status = 400
+        
+        return { 
+          success: false, 
+          message: 'Validation Error', 
+          details: details,
+          error: process.env.NODE_ENV === 'development' ? error : undefined
+        }
+      }
+
+      if (code === 403) {
+        set.status = 403
+        return { success: false, message: 'Forbidden' }
+      }
+      
+      if (code === 401) {
+        set.status = 401
+        return { success: false, message: 'Unauthorized' }
+      }
+
+      console.error('服务器错误:', error)
+      set.status = 500
+      return { success: false, message: 'Server Error' }
+    } else {
+      // HTML页面错误响应
+      set.headers['Content-Type'] = 'text/html; charset=utf-8'
+      
+      if (code === 'NOT_FOUND') {
+        set.status = 404
+        return template('errors/404', {})
+      }
+      
+      if (code === 'VALIDATION') {
+        console.error('验证错误详情:', JSON.stringify(error, null, 2))
+        
+        set.status = 400
+        return template('errors/400', {})
+      }
+
+      if (code === 403) {
+        set.status = 403
+        return template('errors/403', {})
+      }
+      
+      if (code === 401) {
+        set.status = 401
+        return template('errors/401', {})
+      }
+
+      console.error('服务器错误:', error)
+      set.status = 500
+      return template('errors/500', {})
+    }
+  })
+  .use(apiApp)   // 挂载API路由组
+  .use(adminApp) // 挂载Admin路由组
+  .use(publicMenus) // 公共菜单不在API或Admin前缀下
   .listen({
     port: serverConfig.port,
     hostname: serverConfig.host
