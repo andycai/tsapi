@@ -53,7 +53,12 @@ export class AuthUtils {
       email: user.email,
       nickname: user.nickname,
       role_id: user.roleId,
-      role: userWithRole.role || null,
+      role: userWithRole.role ? {
+        id: userWithRole.role.id,
+        name: userWithRole.role.name,
+        description: userWithRole.role.description,
+        permissions: userWithRole.role.permissions || []
+      } : null,
       status: user.status,
       last_login: null, // 需要在数据库中添加该字段
       has_changed_pwd: false, // 需要在数据库中添加该字段

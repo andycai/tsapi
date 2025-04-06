@@ -5,6 +5,12 @@ import { authService } from '../auth/init'
 // 创建处理器实例
 const menuHandler = new MenuHandler()
 
+export const publicMenus = new Elysia({ prefix: '/api/menus/public' })
+  .get(
+    '/tree',
+    () => menuHandler.getMenuTree(),
+  )
+
 // 菜单模块路由
 export const menus = new Elysia({ prefix: '/api/menus' })
   .use(authService)

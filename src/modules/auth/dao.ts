@@ -10,7 +10,11 @@ export class AuthDao {
     return prisma.user.findUnique({
       where: { username },
       include: {
-        role: true
+        role: {
+          include: {
+            permissions: true
+          }
+        }
       }
     })
   }
