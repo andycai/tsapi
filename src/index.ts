@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia'
 import { swagger } from '@elysiajs/swagger'
 import { cookie } from '@elysiajs/cookie'
+import { cors } from '@elysiajs/cors'
 
 import { user as adminApiUser } from './modules/user/init'
 import { note as adminApiNote } from './modules/note/init'
@@ -52,6 +53,13 @@ const publicApp = new Elysia()
 const app = new Elysia()
   .use(swagger())
   .use(cookie())
+  .use(cors({
+    origin: '*', // 允许所有来源，生产环境中应该设置为特定域名
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    maxAge: 86400 // 预检请求结果缓存时间，单位为秒
+  }))
   .use(adminApiApp)  // 需要认证的后台API
   .use(apiApp)  // 公开API
   .use(authApp)   // 认证API

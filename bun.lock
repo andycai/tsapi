@@ -5,6 +5,7 @@
       "name": "app",
       "dependencies": {
         "@elysiajs/cookie": "^0.8.0",
+        "@elysiajs/cors": "^1.2.0",
         "@elysiajs/html": "^1.2.0",
         "@elysiajs/opentelemetry": "^1.2.0",
         "@elysiajs/static": "^1.2.0",
@@ -31,6 +32,8 @@
     "@babel/helper-validator-identifier": ["@babel/helper-validator-identifier@7.25.9", "https://registry.npmmirror.com/@babel/helper-validator-identifier/-/helper-validator-identifier-7.25.9.tgz", {}, "sha512-Ed61U6XJc3CVRfkERJWDz4dJwKe7iLmmJsbOGu9wSloNSFttHV0I8g6UAgb7qnK5ly5bGLPd4oXZlxCdANBOWQ=="],
 
     "@elysiajs/cookie": ["@elysiajs/cookie@0.8.0", "https://registry.npmmirror.com/@elysiajs/cookie/-/cookie-0.8.0.tgz", { "dependencies": { "@types/cookie": "^0.5.1", "@types/cookie-signature": "^1.1.0", "cookie": "^0.5.0", "cookie-signature": "^1.2.1" }, "peerDependencies": { "elysia": ">= 0.8.0" } }, "sha512-CUtDwdYEoN0BcQ3SgZrB4x5nrbM4ih0sMhMuKKdMlEvqLtmRQDfq9KBCrMJW6L/Q0tPH0JLRqwjEbVb6rJufCw=="],
+
+    "@elysiajs/cors": ["@elysiajs/cors@1.2.0", "https://registry.npmmirror.com/@elysiajs/cors/-/cors-1.2.0.tgz", { "peerDependencies": { "elysia": ">= 1.2.0" } }, "sha512-qsJwDAg6WfdQRMfj6uSMcDPSpXvm/zQFeAX1uuJXhIgazH8itSfcDxcH9pMuXVRX1yQNi2pPwNQLJmAcw5mzvw=="],
 
     "@elysiajs/html": ["@elysiajs/html@1.2.0", "https://registry.npmmirror.com/@elysiajs/html/-/html-1.2.0.tgz", { "dependencies": { "@kitajs/html": "^4.1.0", "@kitajs/ts-html-plugin": "^4.0.1" }, "peerDependencies": { "elysia": ">= 1.2.0" } }, "sha512-j/exB9TLn2/KOMWRfPcJ7MNOsmr85uHRjC+kKPLyb1lRtNDWzgab4deUQrxtIv4gt4PDSKmywNnhyD+GrdnH3w=="],
 
