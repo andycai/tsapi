@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 管理系统</title>
+    <script src="/static/js/alpine-min.js" defer></script>
+    <script src="/static/js/admin/auth.js" defer></script>
+    <link rel="stylesheet" href="/static/css/tailwind.min.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <style>
+        [x-cloak] { display: none !important; }
+        .login-bg {
+            background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .login-card {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        @media (prefers-color-scheme: dark) {
+            .login-card {
+                background-color: rgba(17, 24, 39, 0.9);
+            }
+        }
+    </style>
+</head>
+<body class="login-bg min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" x-data="loginManagement()">
+    <div class="login-card max-w-md w-full space-y-8 p-10 rounded-xl shadow-2xl">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+                管理系统
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                请登录以继续操作
+            </p>
+        </div>
+        <form class="mt-8 space-y-6" @submit.prevent="submitForm">
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label for="username" class="sr-only">用户名</label>
+                    <input id="username" name="username" type="text" required x-model="form.username"
+                           class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 focus:z-10 sm:text-sm bg-white dark:bg-gray-800"
+                           placeholder="用户名">
+                </div>
+                <div>
+                    <label for="password" class="sr-only">密码</label>
+                    <input id="password" name="password" type="password" required x-model="form.password"
+                           class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 focus:z-10 sm:text-sm bg-white dark:bg-gray-800"
+                           placeholder="密码">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input id="remember-me" name="remember-me" type="checkbox" x-model="form.remember"
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded">
+                    <label for="remember-me" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                        记住我
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" :disabled="loading"
+                        class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">
+                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                        <svg class="h-5 w-5 text-blue-500 group-hover:text-blue-400" 
+                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" 
+                             aria-hidden="true">
+                            <path fill-rule="evenodd" 
+                                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" 
+                                  clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                    <span x-text="loading ? '登录中...' : '登录'"></span>
+                </button>
+            </div>
+        </form>
+
+        <!-- 错误提示 -->
+        <div x-show="error" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform scale-95"
+             x-transition:enter-end="opacity-100 transform scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 transform scale-100"
+             x-transition:leave-end="opacity-0 transform scale-95"
+             class="mt-4 bg-red-50 dark:bg-red-900 border-l-4 border-red-400 p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700 dark:text-red-200" x-text="error"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改密码模态框 -->
+    <div x-cloak x-show="showChangePasswordModal" 
+         class="fixed inset-0 z-50 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"></div>
+
+            <div class="inline-block w-full max-w-md my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">首次登录修改密码</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">为了您的账户安全，请修改初始密码</p>
+                </div>
+
+                <form @submit.prevent="changePassword">
+                    <div class="px-6 py-4 space-y-4">
+                        <div>
+                            <label for="oldPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300">当前密码</label>
+                            <input type="password" id="oldPassword" x-model="passwordForm.oldPassword" required
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                        </div>
+                        <div>
+                            <label for="newPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300">新密码</label>
+                            <input type="password" id="newPassword" x-model="passwordForm.newPassword" required
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                        </div>
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300">确认新密码</label>
+                            <input type="password" id="confirmPassword" x-model="passwordForm.confirmPassword" required
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                        </div>
+
+                        <!-- 密码修改错误提示 -->
+                        <div x-show="passwordError" class="text-sm text-red-600 dark:text-red-400" x-text="passwordError"></div>
+                    </div>
+
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-3">
+                        <button type="submit" :disabled="passwordLoading"
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span x-text="passwordLoading ? '提交中...' : '确认修改'"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
