@@ -3,13 +3,13 @@ import { swagger } from '@elysiajs/swagger'
 import { cookie } from '@elysiajs/cookie'
 import { cors } from '@elysiajs/cors'
 
-import { user as adminApiUser } from './modules/user/init'
-import { note as adminApiNote } from './modules/note/init'
-import { auth as apiAuth } from './modules/auth/init'
-import { view } from './modules/view/init'
-import { permissions as adminApiPermission } from './modules/permission/init'
-import { roles as adminApiRole } from './modules/role/init'
-import { adminApiMenus, apiMenu } from './modules/menu/init'
+import { user as adminApiUser } from './modules/user/route'
+import { note as adminApiNote } from './modules/note/route'
+import { auth as apiAuth } from './modules/auth/route'
+import { view } from './modules/view/route'
+import { permissions as adminApiPermission } from './modules/permission/route'
+import { roles as adminApiRole } from './modules/role/route'
+import { adminApiMenus, apiMenu } from './modules/menu/route'
 import { configLoader } from './lib/config'
 import { handleApiError, handleAdminError, handleError } from './lib/error'
 import { authMiddleware } from './middlewares/auth'
@@ -50,7 +50,7 @@ const publicApp = new Elysia()
   // 例如: .use(home), .use(about), .use(contact)
 
 // 主应用
-const app = new Elysia()
+const elysiaApp = new Elysia()
   .use(swagger())
   .use(cookie())
   .use(cors({
@@ -71,4 +71,4 @@ const app = new Elysia()
     hostname: serverConfig.host
   })
 
-console.log(`Tsapi is running at ${app.server?.hostname}:${app.server?.port}`)
+console.log(`Tsapi is running at ${elysiaApp.server?.hostname}:${elysiaApp.server?.port}`)

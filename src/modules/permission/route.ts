@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { PermissionHandler } from './handler'
-import { authService } from '../auth/init'
+import { authService } from '../auth/route'
 
 // 创建处理器实例
 const permissionHandler = new PermissionHandler()

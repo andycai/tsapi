@@ -115,4 +115,89 @@ export class RoleDao {
       where: { id }
     })
   }
+
+  /**
+   * 初始化基础角色
+   */
+  async initBaseRoles(): Promise<void> {
+    // 检查是否已初始化
+    if (await this.isModuleInitialized('role:init')) {
+      console.log('角色模块已初始化，跳过')
+      return
+    }
+
+    // 获取所有已创建的权限
+    const permissionList = await prisma.permission.findMany();
+    
+    // 创建基础角色
+    const roles = [
+      {
+        name: '超级管理员',
+        description: '系统超级管理员',
+        // 连接所有权限
+        permissions: { connect: permissionList.map(p => ({ id: p.id })) }
+      },
+      {
+        name: '管理员',
+        description: '系统管理员',
+        // 连接特定权限（通过code查找）
+        permissions: { 
+          connect: permissionList
+            .filter(p => ['user:view', 'user:create', 'user:update', 'role:view'].includes(p.code))
+            .map(p => ({ id: p.id }))
+        }
+      },
+      {
+        name: '普通用户',
+        description: '普通用户',
+        // 仅连接查看权限
+        permissions: {
+          connect: permissionList
+            .filter(p => ['user:view'].includes(p.code))
+            .map(p => ({ id: p.id }))
+        }
+      }
+    ]
+
+    for (const roleData of roles) {
+      await prisma.role.create({
+        data: {
+          name: roleData.name,
+          description: roleData.description,
+          permissions: roleData.permissions,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      })
+    }
+
+    // 标记模块已初始化
+    await this.markModuleInitialized('role:init')
+  }
+
+  /**
+   * 检查模块是否已初始化
+   */
+  private async isModuleInitialized(module: string): Promise<boolean> {
+    const init = await prisma.moduleInit.findUnique({
+      where: { module }
+    })
+    return init?.initialized || false
+  }
+
+  /**
+   * 标记模块已初始化
+   */
+  private async markModuleInitialized(module: string): Promise<void> {
+    await prisma.moduleInit.upsert({
+      where: { module },
+      update: { initialized: true, updatedAt: new Date() },
+      create: {
+        module,
+        initialized: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    })
+  }
 } 

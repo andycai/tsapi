@@ -7,7 +7,8 @@
     "start": "bun run src/index.ts",
     "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/tailwind.css",
     "build:css:min": "NODE_ENV=production tailwindcss -i ./public/css/input.css -o ./public/css/tailwind.min.css -m",
-    "watch:css": "NODE_ENV=production tailwindcss -i ./public/css/input.css -o ./public/css/tailwind.min.css -w -m"
+    "watch:css": "NODE_ENV=production tailwindcss -i ./public/css/input.css -o ./public/css/tailwind.min.css -w -m",
+    "init-db": "bun run src/scripts/init-db.ts"
   },
   "dependencies": {
     "@elysiajs/cookie": "^0.8.0",

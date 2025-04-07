@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia'
-import { getUserId, userService } from '../user/init'
+import { getUserId, userService } from '../user/route'
 
 const memo = t.Object({
     data: t.String(),

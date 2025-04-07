@@ -62,3 +62,16 @@ model Menu {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
+
+/**
+ * 模块初始化记录
+ */
+model ModuleInit {
+  id          Int      @id @default(autoincrement())
+  module      String   @unique
+  initialized Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("module_init")
+}

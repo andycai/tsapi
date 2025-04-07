@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
 import { html } from '@elysiajs/html'
 import { staticPlugin } from '@elysiajs/static'
-import { authService } from '../auth/init'
+import { authService } from '../auth/route'
 import { template } from '../../lib/template'
 import { AuthUtils } from '../auth/utils'
 import { redirect } from '../../lib/http'

@@ -42,4 +42,15 @@ export interface ApiResponse<T = any> {
   success: boolean
   message: string
   data?: T
+}
+
+/**
+ * 模块初始化记录
+ */
+export interface ModuleInit {
+  id: number
+  module: string
+  initialized: boolean
+  created_at: Date
+  updated_at: Date
 } 

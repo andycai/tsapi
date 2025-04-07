@@ -1,18 +1,18 @@
 import { utils } from './init'
 
-interface Module {
+interface IModule {
     Awake(app: App): void;
-    Start(): void;
-    Dispose(): void;
-    AddPublicRouters(): void;
-    AddAuthRouters(): void;
+    Start(app: App): void;
+    Dispose(app: App): void;
+    AddPublicRouters(app: App): void;
+    AddAuthRouters(app: App): void;
 }
 
 /**
  * 应用程序主类
  */
 class App {
-    private modules: Module[] = []
+    private modules: IModule[] = []
     private utils = utils
 
     /**
@@ -26,7 +26,7 @@ class App {
      * 注册模块
      * @param module 模块实例
      */
-    registerModule(module: Module): App {
+    registerModule(module: IModule): App {
         this.modules.push(module)
         return this
     }
@@ -44,7 +44,7 @@ class App {
         
         // 启动所有模块
         for (const module of this.modules) {
-            await module.Start()
+            await module.Start(this)
         }
         
         // 注册路由
@@ -57,12 +57,12 @@ class App {
     private setupRouters(): void {
         // 先添加公共路由
         for (const module of this.modules) {
-            module.AddPublicRouters()
+            module.AddPublicRouters(this)
         }
         
         // 再添加需要认证的路由
         for (const module of this.modules) {
-            module.AddAuthRouters()
+            module.AddAuthRouters(this)
         }
     }
 
@@ -74,11 +74,11 @@ class App {
         
         // 清理所有模块资源
         for (const module of this.modules) {
-            await module.Dispose()
+            await module.Dispose(this)
         }
     }
 }
 
 // 导出 App 类
 export default App
-export { Module, App }
+export { IModule, App }
